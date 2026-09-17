@@ -148,7 +148,7 @@ test('detectHumanSubject and checkIsShirtless accurately identify shirtless phot
   }
 
   // Face/Head: rows 16-20 (skin)
-  for (let y = 16; y < 20; y++) {
+  for (let y = 16; y <= 20; y++) {
     for (let x = 6; x < 14; x++) {
       const idx = (y * width + x) * 4;
       data[idx] = 190; data[idx + 1] = 135; data[idx + 2] = 95; data[idx + 3] = 255; // Tan skin
@@ -165,7 +165,7 @@ test('detectHumanSubject and checkIsShirtless accurately identify shirtless phot
 
   const subject = detectHumanSubject(data, width, height);
   assert.equal(subject.hasHuman, true);
-  assert.equal(subject.minSkinY, 16);
+  assert.equal(subject.headY, 16);
 
   const isShirtless = checkIsShirtless(data, width, height, subject);
   assert.equal(isShirtless, true);

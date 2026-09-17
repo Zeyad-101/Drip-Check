@@ -132,37 +132,58 @@ export function isSkinTone(r, g, b) {
 }
 
 /**
- * Locate human subject in the frame by finding skin/contrast clusters
+ * Locate human subject in the frame by finding the dominant contiguous skin cluster
  */
 export function detectHumanSubject(data, width, height) {
-  let minSkinY = height;
-  let maxSkinY = 0;
-  let skinCount = 0;
+  const startX = Math.floor(width * 0.18);
+  const endX = Math.floor(width * 0.82);
   const skinPerLine = new Array(height).fill(0);
-
-  // Scan center column (20% to 80% width)
-  const startX = Math.floor(width * 0.20);
-  const endX = Math.floor(width * 0.80);
 
   for (let y = 0; y < height; y++) {
     for (let x = startX; x < endX; x++) {
       const idx = (y * width + x) * 4;
       if (isSkinTone(data[idx], data[idx + 1], data[idx + 2])) {
-        skinCount++;
         skinPerLine[y]++;
-        if (y < minSkinY) minSkinY = y;
-        if (y > maxSkinY) maxSkinY = y;
       }
     }
   }
 
-  const hasHuman = skinCount > (width * height * 0.015);
+  // Find contiguous blocks of lines with skin pixels
+  let clusters = [];
+  let currentCluster = null;
+
+  const minWidth = Math.max(3, Math.floor(width * 0.05));
+
+  for (let y = 0; y < height; y++) {
+    if (skinPerLine[y] >= minWidth) { // threshold for human head/face width
+      if (!currentCluster) {
+        currentCluster = { startY: y, endY: y, totalSkin: skinPerLine[y] };
+      } else {
+        currentCluster.endY = y;
+        currentCluster.totalSkin += skinPerLine[y];
+      }
+    } else {
+      if (currentCluster) {
+        clusters.push(currentCluster);
+        currentCluster = null;
+      }
+    }
+  }
+  if (currentCluster) clusters.push(currentCluster);
+
+  if (clusters.length === 0) {
+    return { hasHuman: false, headY: 0, bodyEndY: height, skinCount: 0 };
+  }
+
+  // Pick the largest cluster (the actual human subject, not background noise like straw)
+  clusters.sort((a, b) => b.totalSkin - a.totalSkin);
+  const main = clusters[0];
+
   return {
-    hasHuman,
-    skinCount,
-    minSkinY: hasHuman ? minSkinY : Math.floor(height * 0.15),
-    maxSkinY: hasHuman ? maxSkinY : Math.floor(height * 0.90),
-    skinPerLine
+    hasHuman: true,
+    headY: main.startY,
+    bodyEndY: Math.min(height, main.endY + Math.floor(height * 0.2)),
+    skinCount: main.totalSkin
   };
 }
 
@@ -172,35 +193,29 @@ export function detectHumanSubject(data, width, height) {
 export function checkIsShirtless(data, width, height, subject) {
   if (!subject.hasHuman) return false;
 
-  // Torso is typically below the head/face: from minSkinY + 12% to minSkinY + 38% of height
-  const torsoStartY = Math.min(height - 15, Math.floor(subject.minSkinY + height * 0.10));
-  const torsoEndY = Math.min(height - 2, Math.floor(subject.minSkinY + height * 0.40));
+  // Chest/Torso is immediately below the face: headY + 12 to headY + 45
+  const torsoStartY = Math.min(height - 10, subject.headY + 12);
+  const torsoEndY = Math.min(height, subject.headY + 45);
 
-  if (torsoEndY <= torsoStartY) return false;
+  const startX = Math.floor(width * 0.22);
+  const endX = Math.floor(width * 0.78);
 
-  const startX = Math.floor(width * 0.28);
-  const endX = Math.floor(width * 0.72);
+  let totalPixels = 0;
+  let skinPixels = 0;
 
-  let torsoPixels = 0;
-  let torsoSkinPixels = 0;
-
-  for (let y = torsoStartY; y < torsoEndY; y += 2) {
-    for (let x = startX; x < endX; x += 2) {
+  for (let y = torsoStartY; y < torsoEndY; y++) {
+    for (let x = startX; x < endX; x++) {
       const idx = (y * width + x) * 4;
-      if (data[idx + 3] > 50) {
-        torsoPixels++;
-        if (isSkinTone(data[idx], data[idx + 1], data[idx + 2])) {
-          torsoSkinPixels++;
-        }
+      totalPixels++;
+      if (isSkinTone(data[idx], data[idx + 1], data[idx + 2])) {
+        skinPixels++;
       }
     }
   }
 
-  if (torsoPixels === 0) return false;
-  const torsoSkinRatio = torsoSkinPixels / torsoPixels;
-
-  // If over 28% of the torso region is bare skin, the subject is shirtless
-  return torsoSkinRatio > 0.28;
+  if (totalPixels === 0) return false;
+  const ratio = skinPixels / totalPixels;
+  return ratio > 0.25;
 }
 
 /**
@@ -710,11 +725,11 @@ export function analyzeImageData(ctx, width, height) {
   let topStartY, topEndY, midStartY, midEndY, bottomStartY, bottomEndY;
 
   if (subject.hasHuman) {
-    const personTop = Math.max(0, Math.floor(subject.minSkinY + height * 0.10));
-    const personBottom = Math.min(height, Math.floor(subject.maxSkinY + height * 0.25));
+    const personTop = subject.headY;
+    const personBottom = subject.bodyEndY;
     const bodyHeight = Math.max(25, personBottom - personTop);
 
-    topStartY = personTop;
+    topStartY = Math.min(height - 10, personTop + 10);
     topEndY = Math.min(height - 10, Math.floor(personTop + bodyHeight * 0.45));
 
     midStartY = topEndY;
