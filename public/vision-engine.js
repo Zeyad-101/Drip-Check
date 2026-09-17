@@ -503,8 +503,8 @@ export function generateCritique(analysis) {
         "Ready to call plays at a casual weekend coffee run."
       ],
       upgrades: [
-        `Anchor the wide-leg pants with chunky retro sneakers or clean monochromatic skate shoes.`,
-        `Layer a slim silver chain over the collar to lean further into vintage streetwear.`
+        `Swap the ${mid.name} bottoms for dark raw selvedge denim or tailored wide-leg trousers to sharpen the oversized jersey silhouette.`,
+        `Layer a boxy zip-up hoodie or structured workwear jacket over the jersey to give the torso more architectural weight.`
       ],
       verdicts: ['ALL-STAR STREETWEAR.', 'PRO DRAFT SELECTION.', 'GRIDIRON PERFECTION.']
     },
@@ -528,9 +528,9 @@ export function generateCritique(analysis) {
         "You uploaded a shirtless photo to an outfit rating app. The audacity is inspiring."
       ],
       upgrades: [
-        "Literally put on any shirt. An open linen camp-collar shirt would immediately jump your score by +4 points.",
-        "Throw on a relaxed crochet shirt or a crisp white tank to turn 'forgot my clothes' into intentional beach style.",
-        "Even draping a lightweight overshirt over your shoulders would give this an instant aesthetic upgrade."
+        "Throw on an open linen camp-collar shirt over your bottoms to instantly jump +4 points into intentional summer style.",
+        "Put on a boxy heavyweight cotton t-shirt or vintage washed shirt to anchor the fit with actual apparel.",
+        "Drape an unbuttoned lightweight overshirt over your shoulders to turn beach mode into a real outfit."
       ],
       verdicts: ['PUT A SHIRT ON.', 'NO SHIRT, NO DRIP.', 'VITAMIN D OVERLOAD.', 'BEACH BUM ENERGY.']
     },
@@ -553,9 +553,9 @@ export function generateCritique(analysis) {
         "Dressed like you're about to steal the Declaration of Independence at 2 AM."
       ],
       upgrades: [
-        `Break the ${top.name} monolith with a chunky silver chain or a crisp white undershirt hem.`,
-        `Swap flat cotton for a heavyweight raw wool or textured leather jacket to give depth to the ${top.name}.`,
-        `Introduce high-shine hardware or a textured belt to catch the light against the ${mid.name}.`
+        `Swap the ${top.name} for a heavyweight waffle knit or textured mohair crewneck to break up flat fabric monotony.`,
+        `Replace the ${mid.name} with washed charcoal carpenter trousers or wide-leg corduroys to add tactile contrast to the dark silhouette.`,
+        `Layer an off-white or slate gray chore jacket over the ${top.name} for structured tonal dimension.`
       ],
       verdicts: ['SHADOW REIGN.', 'VOID CHIC PERFECTION.', 'NOIR MASTERCLASS.', 'STEALTH MODE UNLOCKED.']
     },
@@ -575,8 +575,9 @@ export function generateCritique(analysis) {
         "Dressed like you're about to ascend to heaven or get banned from a red-sauce Italian dinner."
       ],
       upgrades: [
-        `Ground the airy ${top.name} with raw tan leather sandals or chocolate suede boots.`,
-        `Add subtle contrast with a bone-horn watch or tortoiseshell frames.`
+        `Swap the ${mid.name} for washed beige linen trousers or stone-colored denim to break up the sterile all-white look.`,
+        `Layer an ecru waffle knit or textured canvas overshirt over the ${top.name} to add depth and shadow.`,
+        `Switch out the ${top.name} for a relaxed camp-collar shirt to give the light silhouette relaxed drape.`
       ],
       verdicts: ['PRISTINE AND DANGEROUS.', 'UNBLEMISHED EXCELLENCE.', 'HEAVEN SENT.']
     },
@@ -596,8 +597,8 @@ export function generateCritique(analysis) {
         "Half piano keys, half tuxedo penguin, but somehow you pulled it off."
       ],
       upgrades: [
-        `Anchor the stark contrast with textured footwear in ${bottom.name}.`,
-        `Layer an earthy overshirt over the ${top.name} to soften the graphic transition.`
+        `Swap the ${mid.name} for mid-wash denim or charcoal wool trousers to soften the stark graphic jump.`,
+        `Layer a relaxed earthy overshirt or textured cardigan over the ${top.name} to bridge the contrast.`
       ],
       verdicts: ['TIMELESS PRECISION.', 'GRAPHIC MASTERY.', 'STARK AND STRIKING.']
     },
@@ -617,8 +618,8 @@ export function generateCritique(analysis) {
         "You dressed like an artisan carpenter who spends 90% of their day adjusting their beanie."
       ],
       upgrades: [
-        `Add one crisp element (like an off-white tee collar) so the ${top.name} doesn't feel overly muddy.`,
-        `Elevate the workwear vibe with polished dark leather loafers instead of canvas sneakers.`
+        `Swap the ${top.name} for a heavyweight cream waffle thermal or textured chore coat to brighten the earthy base.`,
+        `Switch the ${mid.name} pants to wide-leg olive fatigues or dark brown double-knee canvas trousers for authentic workwear texture.`
       ],
       verdicts: ['WARM INTELLECTUAL.', 'EARTHY SOPHISTICATION.', 'NATURE BOY LUXURY.']
     },
@@ -638,8 +639,8 @@ export function generateCritique(analysis) {
         "Dressed like your weekend plan is browsing vintage thrift racks for four consecutive hours."
       ],
       upgrades: [
-        `Elevate the ${top.name} with intentional jewelry or a structured tailored overshirt.`,
-        `Swap standard sneakers for rugged lug-sole boots to give the ${mid.name} more posture.`
+        `Swap the ${top.name} for a boxy heavyweight knit polo or structured overshirt to elevate beyond a basic tee.`,
+        `Switch the ${mid.name} for wide-leg selvedge denim with clean cuffed hems or relaxed pleated chinos.`
       ],
       verdicts: ['STREETWEAR STAPLE.', 'EASY ROTATION WINNER.', 'CLEAN BLUEPRINT.']
     },
@@ -659,8 +660,8 @@ export function generateCritique(analysis) {
         "Soft enough to be used as acoustic soundproofing paneling in a recording studio."
       ],
       upgrades: [
-        `Ground the soft ${top.name} with structured dark trousers or a heavy leather belt.`,
-        `Add a bold dark watch or sunglasses to keep the ${mid.name} from washing out completely.`
+        `Swap the ${mid.name} for structured charcoal or washed black trousers to anchor the gentle ${top.name}.`,
+        `Layer an earthy olive or camel jacket over the pastel ${top.name} to ground the soft tones with street grit.`
       ],
       verdicts: ['DELICATE MASTERPIECE.', 'SOFT AND INTENTIONAL.', 'PASTEL PURITY.']
     },
@@ -680,8 +681,8 @@ export function generateCritique(analysis) {
         "Visibility 10/10. Air traffic control can track you from 30,000 feet."
       ],
       upgrades: [
-        `Let the ${top.name} be the only loud piece—keep every other garment dead neutral.`,
-        `Balance the saturation with washed black denim instead of bright footwear.`
+        `Swap the ${mid.name} for dark raw denim or relaxed black carpenter pants to let the loud ${top.name} stand alone.`,
+        `Tone down the clash by layering a muted dark bomber or utility vest over the vibrant ${top.name}.`
       ],
       verdicts: ['ELECTRIC PRESENCE.', 'UNAPOLOGETICALLY LOUD.', 'RETINA MELTER.']
     },
@@ -702,8 +703,8 @@ export function generateCritique(analysis) {
         "Your outfit looks like a graphic design student's corrupted Photoshop file."
       ],
       upgrades: [
-        `Swap the ${mid.name} immediately for pitch black or raw denim to save the ${top.name}.`,
-        `Pick ONE hero color and throw the other one into a dark closet until next festival season.`
+        `Swap the ${mid.name} immediately for relaxed pitch black trousers or dark raw denim to give the ${top.name} breathing room.`,
+        `Replace the ${top.name} with a clean neutral sweatshirt or crisp white oxford so the ${mid.name} becomes the single statement piece.`
       ],
       verdicts: ['CRIME AGAINST RETINAS.', 'CALL THE FASHION POLICE.', 'CHAOS UNCONTAINED.']
     },
@@ -723,8 +724,8 @@ export function generateCritique(analysis) {
         "Bold enough to make primary school art teachers shed a tear of joy."
       ],
       upgrades: [
-        `Neutralize the footwear in ${bottom.name} so it doesn't create a third competing hue.`,
-        `Add a muted jacket to frame the ${top.name} and ${mid.name} color clash.`
+        `Swap the ${mid.name} for neutral stone or slate gray trousers to prevent two opposing colors from fighting.`,
+        `Layer a dark unbuttoned overshirt or trench coat over the ${top.name} to frame the contrasting pieces.`
       ],
       verdicts: ['OPTICAL CHEMISTRY.', 'VIBRANT AND BALANCED.', 'DYNAMIC POP.']
     },
@@ -744,8 +745,8 @@ export function generateCritique(analysis) {
         "Nobody is going to roast you, but nobody is going to stop you on the street either."
       ],
       upgrades: [
-        `Introduce one bold accessory—a sculptural bag, vintage cap, or statement watch—to elevate the look.`,
-        `Play with oversized or cropped proportions to take the ${top.name} from safe to editorial.`
+        `Swap the ${top.name} for a boxy crop tee or heavyweight drop-shoulder knit to take the silhouette from basic to editorial.`,
+        `Switch the ${mid.name} for wide-leg pleated trousers or loose carpenter denim for a more intentional streetwear drape.`
       ],
       verdicts: ['EFFORTLESSLY WEARABLE.', 'CLEAN AND COMPOSED.', 'EVERYDAY ROTATION.']
     }
