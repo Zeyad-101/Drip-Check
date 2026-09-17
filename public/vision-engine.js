@@ -1,49 +1,51 @@
 /**
  * DripCheck Client-Side Vision & Fashion Critique Engine
- * 100% In-Browser Computer Vision & Color Theory Analysis
+ * Advanced In-Browser Color Histogram Extraction, Harmony Analysis & Dynamic Roast Generator
  */
 
-// Curated fashion color palette with RGB values and fashion-accurate names
-const FASHION_PALETTE = [
+// Curated 32 fashion pigments with RGB values, fashion names, and category tags
+export const FASHION_PALETTE = [
   // Neutrals & Grayscale
-  { name: 'Charcoal Black', r: 24, g: 24, b: 26, isNeutral: true },
-  { name: 'Pitch Black', r: 10, g: 10, b: 12, isNeutral: true },
-  { name: 'Slate Gray', r: 85, g: 95, b: 105, isNeutral: true },
-  { name: 'Cool Gray', r: 155, g: 160, b: 168, isNeutral: true },
-  { name: 'Off-White', r: 245, g: 243, b: 238, isNeutral: true },
-  { name: 'Crisp White', r: 255, g: 255, b: 255, isNeutral: true },
-  { name: 'Cream', r: 248, g: 238, b: 215, isNeutral: true },
-  { name: 'Beige', r: 222, g: 208, b: 182, isNeutral: true },
-  { name: 'Tan', r: 205, g: 175, b: 135, isNeutral: true },
-  { name: 'Camel', r: 195, g: 150, b: 100, isNeutral: false },
-  { name: 'Chocolate Brown', r: 65, g: 42, b: 32, isNeutral: true },
+  { name: 'Pitch Black', r: 15, g: 15, b: 18, category: 'neutral', isDark: true, isLight: false },
+  { name: 'Charcoal Black', r: 38, g: 38, b: 42, category: 'neutral', isDark: true, isLight: false },
+  { name: 'Slate Gray', r: 88, g: 96, b: 106, category: 'neutral', isDark: false, isLight: false },
+  { name: 'Cool Gray', r: 150, g: 155, b: 162, category: 'neutral', isDark: false, isLight: false },
+  { name: 'Off-White', r: 242, g: 240, b: 234, category: 'neutral', isDark: false, isLight: true },
+  { name: 'Crisp White', r: 255, g: 255, b: 255, category: 'neutral', isDark: false, isLight: true },
+  { name: 'Cream', r: 246, g: 236, b: 215, category: 'neutral', isDark: false, isLight: true },
+  { name: 'Beige', r: 218, g: 202, b: 178, category: 'neutral', isDark: false, isLight: false },
+  { name: 'Tan', r: 195, g: 165, b: 125, category: 'earth', isDark: false, isLight: false },
+  { name: 'Camel', r: 185, g: 138, b: 88, category: 'earth', isDark: false, isLight: false },
+  { name: 'Chocolate Brown', r: 68, g: 45, b: 34, category: 'earth', isDark: true, isLight: false },
 
   // Earth Tones & Greens
-  { name: 'Olive Green', r: 60, g: 72, b: 48, isNeutral: false },
-  { name: 'Forest Green', r: 35, g: 60, b: 45, isNeutral: false },
-  { name: 'Sage Green', r: 135, g: 155, b: 135, isNeutral: false },
-  { name: 'Terracotta', r: 185, g: 85, b: 65, isNeutral: false },
-  { name: 'Rust', r: 155, g: 65, b: 38, isNeutral: false },
-  { name: 'Mustard Yellow', r: 210, g: 160, b: 45, isNeutral: false },
+  { name: 'Olive Green', r: 65, g: 78, b: 52, category: 'earth', isDark: false, isLight: false },
+  { name: 'Forest Green', r: 32, g: 58, b: 42, category: 'earth', isDark: true, isLight: false },
+  { name: 'Sage Green', r: 138, g: 158, b: 138, category: 'pastel', isDark: false, isLight: false },
+  { name: 'Terracotta', r: 182, g: 86, b: 64, category: 'earth', isDark: false, isLight: false },
+  { name: 'Rust', r: 150, g: 62, b: 35, category: 'earth', isDark: false, isLight: false },
+  { name: 'Mustard Yellow', r: 212, g: 162, b: 42, category: 'warm', isDark: false, isLight: false },
 
-  // Blues & Cool Tones
-  { name: 'Dark Navy', r: 22, g: 35, b: 65, isNeutral: true },
-  { name: 'Midnight Blue', r: 15, g: 25, b: 45, isNeutral: true },
-  { name: 'Cobalt Blue', r: 25, g: 75, b: 185, isNeutral: false },
-  { name: 'Ice Blue', r: 180, g: 205, b: 225, isNeutral: false },
-  { name: 'Faded Denim', r: 110, g: 140, b: 175, isNeutral: false },
+  // Blues & Denim
+  { name: 'Dark Navy', r: 20, g: 32, b: 60, category: 'denim', isDark: true, isLight: false },
+  { name: 'Midnight Blue', r: 14, g: 22, b: 42, category: 'denim', isDark: true, isLight: false },
+  { name: 'Faded Denim', r: 105, g: 138, b: 172, category: 'denim', isDark: false, isLight: false },
+  { name: 'Cobalt Blue', r: 28, g: 82, b: 195, category: 'vibrant', isDark: false, isLight: false },
+  { name: 'Ice Blue', r: 182, g: 208, b: 230, category: 'pastel', isDark: false, isLight: true },
 
-  // Reds, Purples & Warm Accents
-  { name: 'Burgundy', r: 105, g: 25, b: 40, isNeutral: false },
-  { name: 'Crimson Red', r: 185, g: 30, b: 40, isNeutral: false },
-  { name: 'Coral', r: 235, g: 110, b: 95, isNeutral: false },
-  { name: 'Lavender', r: 190, g: 175, b: 220, isNeutral: false },
-  { name: 'Dusty Rose', r: 195, g: 140, b: 150, isNeutral: false },
+  // Warm & Reds
+  { name: 'Burgundy', r: 102, g: 24, b: 42, category: 'warm', isDark: true, isLight: false },
+  { name: 'Crimson Red', r: 186, g: 28, b: 38, category: 'vibrant', isDark: false, isLight: false },
+  { name: 'Coral', r: 236, g: 108, b: 92, category: 'warm', isDark: false, isLight: false },
+  { name: 'Dusty Rose', r: 192, g: 136, b: 146, category: 'pastel', isDark: false, isLight: false },
+  { name: 'Lavender', r: 188, g: 172, b: 218, category: 'pastel', isDark: false, isLight: true },
 
-  // Neons & Loud Accents
-  { name: 'Neon Green', r: 65, g: 255, b: 85, isNeutral: false },
-  { name: 'Cyber Cyan', r: 0, g: 240, b: 255, isNeutral: false },
-  { name: 'Hot Pink', r: 255, g: 45, b: 145, isNeutral: false }
+  // Neons & Brights
+  { name: 'Neon Green', r: 62, g: 255, b: 82, category: 'neon', isDark: false, isLight: false },
+  { name: 'Cyber Cyan', r: 0, g: 238, b: 255, category: 'neon', isDark: false, isLight: false },
+  { name: 'Hot Pink', r: 255, g: 42, b: 140, category: 'neon', isDark: false, isLight: false },
+  { name: 'Electric Orange', r: 255, g: 95, b: 15, category: 'neon', isDark: false, isLight: false },
+  { name: 'Sunshine Yellow', r: 255, g: 215, b: 45, category: 'vibrant', isDark: false, isLight: true }
 ];
 
 /**
@@ -77,288 +79,485 @@ export function rgbToHsl(r, g, b) {
 }
 
 /**
- * Find the closest matching fashion color name using weighted Euclidean distance
+ * Weighted perceptual color distance (Redmean metric)
  */
-export function findNearestColorName(r, g, b) {
+export function colorDistance(r1, g1, b1, r2, g2, b2) {
+  const rmean = (r1 + r2) / 2;
+  const dr = r1 - r2;
+  const dg = g1 - g2;
+  const db = b1 - b2;
+  return Math.sqrt(
+    (2 + rmean / 256) * dr * dr +
+    4 * dg * dg +
+    (2 + (255 - rmean) / 256) * db * db
+  );
+}
+
+/**
+ * Find closest matching color from the fashion palette
+ */
+export function findNearestColor(r, g, b) {
   let closest = FASHION_PALETTE[0];
   let minDistance = Infinity;
 
   for (const color of FASHION_PALETTE) {
-    // Redmean color distance approximation
-    const rmean = (r + color.r) / 2;
-    const dr = r - color.r;
-    const dg = g - color.g;
-    const db = b - color.b;
-    const dist = Math.sqrt(
-      (2 + rmean / 256) * dr * dr +
-      4 * dg * dg +
-      (2 + (255 - rmean) / 256) * db * db
-    );
-
+    const dist = colorDistance(r, g, b, color.r, color.g, color.b);
     if (dist < minDistance) {
       minDistance = dist;
       closest = color;
     }
   }
 
-  return closest.name;
+  return closest;
+}
+
+export function findNearestColorName(r, g, b) {
+  return findNearestColor(r, g, b).name;
 }
 
 /**
- * Full color descriptor including name, HSL and neutrality
+ * Detect if an RGB pixel is a human skin tone to avoid treating skin as clothing
  */
-export function getColorDescriptor(r, g, b) {
-  const name = findNearestColorName(r, g, b);
-  const hsl = rgbToHsl(r, g, b);
-  const paletteMatch = FASHION_PALETTE.find(c => c.name === name);
-  const isNeutral = paletteMatch ? paletteMatch.isNeutral : hsl.s < 18 || hsl.l < 15 || hsl.l > 88;
-
-  return {
-    name,
-    r,
-    g,
-    b,
-    ...hsl,
-    isNeutral
-  };
+export function isSkinTone(r, g, b) {
+  return (
+    r > 75 && g > 40 && b > 25 &&
+    r > g && g > b &&
+    (r - g) >= 12 && (r - b) >= 18 &&
+    r < 240
+  );
 }
 
 /**
- * Determine harmony classification from a 3-garment palette (top, mid, bottom)
+ * Extract dominant color from a canvas region using histogram binning instead of naive average
+ */
+export function extractDominantColor(data, width, startY, endY, startX, endX, ignoreColorName = null) {
+  const histogram = new Map();
+
+  for (let y = startY; y < endY; y += 2) {
+    for (let x = startX; x < endX; x += 2) {
+      const idx = (y * width + x) * 4;
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
+      const a = data[idx + 3];
+
+      if (a < 50) continue; // Transparent
+
+      // Skip obvious skin tones in top section to focus on real apparel
+      if (startY < width * 0.45 && isSkinTone(r, g, b)) continue;
+
+      const nearest = findNearestColor(r, g, b);
+      if (ignoreColorName && nearest.name === ignoreColorName) continue;
+
+      const count = histogram.get(nearest.name) || 0;
+      histogram.set(nearest.name, count + 1);
+    }
+  }
+
+  if (histogram.size === 0) {
+    return FASHION_PALETTE.find(c => c.name === 'Slate Gray');
+  }
+
+  let dominantName = null;
+  let maxCount = -1;
+  for (const [name, count] of histogram.entries()) {
+    if (count > maxCount) {
+      maxCount = count;
+      dominantName = name;
+    }
+  }
+
+  const match = FASHION_PALETTE.find(c => c.name === dominantName);
+  const hsl = rgbToHsl(match.r, match.g, match.b);
+  return { ...match, ...hsl };
+}
+
+/**
+ * Comprehensive Harmony & Aesthetic Classification
  */
 export function computeHarmony(palette) {
-  const [c1, c2, c3] = palette;
-  const nonNeutrals = palette.filter(c => !c.isNeutral && c.s > 15);
-  const lights = palette.map(c => c.l);
-  const maxL = Math.max(...lights);
-  const minL = Math.min(...lights);
-  const contrastRatio = maxL - minL;
+  const [top, mid, bottom] = palette;
 
-  // 1. All or mostly neutral monochrome (Black, Charcoal, Slate)
-  if (palette.every(c => c.isNeutral || c.s < 20)) {
-    if (contrastRatio > 40) {
-      return {
-        type: 'high-contrast',
-        description: 'Clean monochrome high-contrast pairing',
-        scoreBonus: 0.9
-      };
-    }
+  // 1. All-Black / Ultra Dark
+  if (top.isDark && mid.isDark) {
     return {
-      type: 'monochrome',
-      description: 'Unified tonal monochrome palette',
-      scoreBonus: 0.8
+      type: 'all-black',
+      label: 'All-Dark Stealth',
+      scoreBonus: 1.2
     };
   }
 
-  // 2. High contrast neutral + single accent
-  if (nonNeutrals.length === 1) {
+  // 2. All-White / Light Tonal
+  if (top.isLight && mid.isLight) {
     return {
-      type: 'earthy-contrast',
-      description: `Accent ${nonNeutrals[0].name} balanced against clean neutrals`,
+      type: 'all-white',
+      label: 'All-White Sculptural',
       scoreBonus: 1.0
     };
   }
 
-  // 3. Two non-neutral colors: check hue relationship
-  if (nonNeutrals.length >= 2) {
-    // Ultra high saturation collision (e.g. Neon Green + Hot Pink)
-    if (nonNeutrals[0].s >= 80 && nonNeutrals[1].s >= 80) {
+  // 3. High Contrast Classic (e.g. White Top + Dark Bottom or vice versa)
+  if ((top.isLight && mid.isDark) || (top.isDark && mid.isLight)) {
+    return {
+      type: 'high-contrast',
+      label: 'Monochrome High-Contrast',
+      scoreBonus: 1.3
+    };
+  }
+
+  // 4. Earth Tone / Warm Layering (Olive, Camel, Rust, Tan, Chocolate)
+  if (top.category === 'earth' || mid.category === 'earth') {
+    return {
+      type: 'earth-tone',
+      label: 'Organic Earth Tone',
+      scoreBonus: 1.1
+    };
+  }
+
+  // 5. Denim Everyday Classic
+  if (mid.category === 'denim' || top.category === 'denim') {
+    return {
+      type: 'denim-casual',
+      label: 'Indigo Streetwear Classic',
+      scoreBonus: 0.9
+    };
+  }
+
+  // 6. Pastel Dream
+  if (top.category === 'pastel' || mid.category === 'pastel') {
+    return {
+      type: 'pastel',
+      label: 'Muted Pastel Minimalist',
+      scoreBonus: 0.9
+    };
+  }
+
+  // 7. Neon & Vibrant Pop
+  if (top.category === 'neon' || mid.category === 'neon') {
+    if (top.category === 'neon' && mid.category === 'neon') {
       return {
         type: 'clash',
-        description: 'High-intensity competing color collision',
-        scoreBonus: -1.4
+        label: 'Hyper-Saturated Neon Collision',
+        scoreBonus: -1.8
       };
     }
+    return {
+      type: 'vibrant-accent',
+      label: 'Neon Streetwear Accent',
+      scoreBonus: 0.6
+    };
+  }
 
-    const diff = Math.abs(nonNeutrals[0].h - nonNeutrals[1].h);
-    const hueDistance = diff > 180 ? 360 - diff : diff;
+  // 8. Color wheel complementary check
+  const hueDiff = Math.abs(top.h - mid.h);
+  const hueDist = hueDiff > 180 ? 360 - hueDiff : hueDiff;
 
-    // Complementary (130° - 210°)
-    if (hueDistance >= 130 && hueDistance <= 210) {
-      return {
-        type: 'complementary',
-        description: 'Vibrant complementary color contrast',
-        scoreBonus: 0.7
-      };
-    }
+  if (hueDist >= 130 && hueDist <= 210) {
+    return {
+      type: 'complementary',
+      label: 'Complementary Tension',
+      scoreBonus: 0.8
+    };
+  }
 
-    // Analogous (within 60°)
-    if (hueDistance <= 60) {
-      return {
-        type: 'analogous',
-        description: 'Harmonious analogous tone blend',
-        scoreBonus: 0.85
-      };
-    }
+  if (hueDist <= 45) {
+    return {
+      type: 'monochrome',
+      label: 'Tonal Analogous Harmony',
+      scoreBonus: 0.7
+    };
+  }
 
-    // High saturation clash fallback
-    if (nonNeutrals[0].s > 60 && nonNeutrals[1].s > 60) {
-      return {
-        type: 'clash',
-        description: 'High-intensity competing color collision',
-        scoreBonus: -1.2
-      };
-    }
+  if (top.s > 60 && mid.s > 60) {
+    return {
+      type: 'clash',
+      label: 'Competing Saturated Collision',
+      scoreBonus: -1.4
+    };
   }
 
   return {
     type: 'balanced',
-    description: 'Everyday casual multi-tone coordination',
-    scoreBonus: 0.3
+    label: 'Casual Tonal Ensemble',
+    scoreBonus: 0.4
   };
 }
 
 /**
- * Generate witty, dynamic fashion critique accurately reflecting detected colors
+ * Deterministic pseudo-random integer from string (for consistent per-photo variety)
+ */
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+/**
+ * Generate highly varied, realistic, witty critique
  */
 export function generateCritique(analysis) {
-  const { top, mid, bottom, harmony, patternDensity } = analysis;
-  const colors = [top.name, mid.name, bottom.name];
-  const uniqueColors = [...new Set(colors)];
+  const { top, mid, bottom, harmony, patternDensity, pixelSignature = '' } = analysis;
+  const hash = hashString(`${top.name}-${mid.name}-${bottom.name}-${pixelSignature}`);
 
-  let baseScore = 7.0 + (harmony.scoreBonus || 0);
+  // Base score variance based on actual harmony and contrast
+  let baseScore = 7.4 + harmony.scoreBonus;
 
-  // Bonus for clean texture coordination
-  if (patternDensity === 'clean') baseScore += 0.4;
-  else if (patternDensity === 'busy') baseScore -= 0.3;
+  // Additional subtle score calibration
+  if (patternDensity === 'clean') baseScore += 0.3;
+  if (top.category === 'neutral' && mid.category !== 'neutral') baseScore += 0.2; // tasteful anchor
 
-  // Clamp score cleanly between 4.2 and 9.7
-  const score = Math.min(9.7, Math.max(4.2, Math.round(baseScore * 10) / 10));
+  // Introduce small realistic decimal variation based on image signature (e.g. 7.9, 8.4, 9.2)
+  const decimalJitter = ((hash % 7) - 3) * 0.1;
+  const finalScore = Math.min(9.8, Math.max(4.2, Math.round((baseScore + decimalJitter) * 10) / 10));
 
-  let aura = 'CASUAL MINIMALIST';
-  let vibe = `Coordinated ensemble balancing ${top.name} with ${mid.name}.`;
-  let wins = [
-    `Deliberate palette coordination around ${top.name}`,
-    `Proportional color grounding from ${mid.name} through to the shoes`,
-    patternDensity === 'clean' ? 'Smooth, uncluttered fabric silhouettes' : 'Dynamic texture and visual energy'
-  ];
-  let roast = 'Safe enough to blend into any coffee shop unnoticed.';
-  let upgrade = `Consider swapping the ${mid.name} piece for a textured layer to add depth.`;
-  let verdict = 'EFFORTLESSLY WEARABLE.';
+  // Persona Banks
+  const PERSONA_BANK = {
+    'all-black': {
+      auras: ['VOID PHANTOM', 'CYBERPUNK STEALTH', 'MIDNIGHT PROTOCOL', 'SUB-BASS MINIMALIST', 'BERLIN NIGHTCLUB ARCHITECT'],
+      vibes: [
+        `Strict all-dark execution centered on ${top.name} with zero visual distractions.`,
+        `Shadow-mode discipline: ${top.name} flowing seamlessly into ${mid.name}.`,
+        `Monolithic darkness that turns clothing into a sharp silhouette.`
+      ],
+      wins: [
+        ['Zero color friction — pure focus on silhouette and drape', 'Instant high-authority streetwear presence', 'Foolproof evening coordination'],
+        ['Unforgiving tonal confidence', 'Effortless downtown minimalist energy', 'Sharp monochrome framing that elongates the body'],
+        ['Clean dark-mode dominance', 'Understated luxury in pure shadows', 'Total immunity to color-coordination mistakes']
+      ],
+      roasts: [
+        "You dressed entirely in darkness hoping no one would perceive your insecurities.",
+        "Looking like you run an underground techno label that has never turned a profit.",
+        "You look like a playable unlockable character that hasn't loaded their texture pack yet.",
+        "Dressed like you're about to steal the Declaration of Independence at 2 AM."
+      ],
+      upgrades: [
+        `Break the ${top.name} monolith with a chunky silver chain or a crisp white undershirt hem.`,
+        `Swap flat cotton for a heavyweight raw wool or textured leather jacket to give depth to the ${top.name}.`,
+        `Introduce high-shine hardware or a textured belt to catch the light against the ${mid.name}.`
+      ],
+      verdicts: ['SHADOW REIGN.', 'VOID CHIC PERFECTION.', 'NOIR MASTERCLASS.', 'STEALTH MODE UNLOCKED.']
+    },
+    'all-white': {
+      auras: ['ANGELIC DRIFT', 'MINIMALIST SCULPTOR', 'COFFEE HAZARD', 'SUMMER ART GALLERIST'],
+      vibes: [
+        `Pristine, high-maintenance ivory tones radiating pure deliberate cleanliness.`,
+        `Architectural light spectrum pairing ${top.name} with crisp ${mid.name}.`
+      ],
+      wins: [
+        ['Fearless high-maintenance discipline that commands immediate attention', 'Bright, airy visual weight that elevates mood', 'Sculptural, museum-grade aesthetic simplicity'],
+        ['Immaculate tonal confidence', 'Clean, radiant summer presence', 'Effortless resort elegance']
+      ],
+      roasts: [
+        "You are exactly one rogue espresso drop away from an absolute mental breakdown.",
+        "Looking like an architect who refuses to build anything that isn't made of bleached concrete.",
+        "Dressed like you're about to ascend to heaven or get banned from a red-sauce Italian dinner."
+      ],
+      upgrades: [
+        `Ground the airy ${top.name} with raw tan leather sandals or chocolate suede boots.`,
+        `Add subtle contrast with a bone-horn watch or tortoiseshell frames.`
+      ],
+      verdicts: ['PRISTINE AND DANGEROUS.', 'UNBLEMISHED EXCELLENCE.', 'HEAVEN SENT.']
+    },
+    'high-contrast': {
+      auras: ['GRAPHIC CODE', 'CHESS GRANDMASTER', 'ZEBRA STATEMENT', 'TIMELESS SHARP', 'NEW YORK STANDARD'],
+      vibes: [
+        `High-impact visual drama pitting luminous ${top.name} against deep ${mid.name}.`,
+        `Binary perfection: high-contrast color blocking with maximum room presence.`
+      ],
+      wins: [
+        [`Bold value separation between ${top.name} and ${mid.name}`, 'Instant optical clarity from 50 feet away', 'Bulletproof proportions that never feel dated'],
+        ['Classic graphic tension with zero clutter', 'Powerful torso-to-leg framing', 'Clean, modern urban elegance']
+      ],
+      roasts: [
+        "You look like you're about to teach someone chess or adjudicate a tennis match.",
+        "Looking like a walking editorial photo shoot that forgot to bring the rest of the colors.",
+        "Half piano keys, half tuxedo penguin, but somehow you pulled it off."
+      ],
+      upgrades: [
+        `Anchor the stark contrast with textured footwear in ${bottom.name}.`,
+        `Layer an earthy overshirt over the ${top.name} to soften the graphic transition.`
+      ],
+      verdicts: ['TIMELESS PRECISION.', 'GRAPHIC MASTERY.', 'STARK AND STRIKING.']
+    },
+    'earth-tone': {
+      auras: ['SPECIALTY ROASTER', 'ALPINE PROFESSOR', 'ORGANIC BRUTALIST', 'CABIN ARCHIVIST', 'AUTUMN PATROL'],
+      vibes: [
+        `Warm, grounded organic palette pairing ${top.name} against earthy ${mid.name}.`,
+        `Subtle forestry and heritage tones that exude quiet craftsmanship.`
+      ],
+      wins: [
+        [`Rich textured interplay between ${top.name} and ${mid.name}`, 'Natural, approachable warmth that feels intentional', 'Sophisticated palette rooted in timeless workwear'],
+        ['Grounded organic balance', 'Tasteful color restraint with zero synthetic clash', 'Quiet luxury heritage aesthetic']
+      ],
+      roasts: [
+        "You look ready to corner someone in a bar and explain the history of Japanese selvedge denim.",
+        "Looking like you own three pour-over kettles and have very strong opinions on oat milk.",
+        "You dressed like an artisan carpenter who spends 90% of their day adjusting their beanie."
+      ],
+      upgrades: [
+        `Add one crisp element (like an off-white tee collar) so the ${top.name} doesn't feel overly muddy.`,
+        `Elevate the workwear vibe with polished dark leather loafers instead of canvas sneakers.`
+      ],
+      verdicts: ['WARM INTELLECTUAL.', 'EARTHY SOPHISTICATION.', 'NATURE BOY LUXURY.']
+    },
+    'denim-casual': {
+      auras: ['OFF-DUTY BLUEPRINT', 'INDIGO ARCHIVIST', '90s VINTAGE DIGGER', 'METROPOLITAN CASUAL'],
+      vibes: [
+        `Effortless everyday cool anchoring ${top.name} with reliable ${mid.name} indigo.`,
+        `Relaxed urban styling with natural denim heritage.`
+      ],
+      wins: [
+        [`The ${mid.name} grounds the entire silhouette with ease`, 'Versatile, ready-for-anything streetwear foundation', 'Timeless casual balance between top and bottom'],
+        ['Zero pretense, pure utility', 'Classic street proportions', 'Dependable color balance']
+      ],
+      roasts: [
+        "Safe enough to sneak through airport security without a single person remembering your face.",
+        "You look like the 'default character' avatar in an open-world streetwear video game.",
+        "Dressed like your weekend plan is browsing vintage thrift racks for four consecutive hours."
+      ],
+      upgrades: [
+        `Elevate the ${top.name} with intentional jewelry or a structured tailored overshirt.`,
+        `Swap standard sneakers for rugged lug-sole boots to give the ${mid.name} more posture.`
+      ],
+      verdicts: ['STREETWEAR STAPLE.', 'EASY ROTATION WINNER.', 'CLEAN BLUEPRINT.']
+    },
+    'pastel': {
+      auras: ['SOFT BOY DRIFT', 'MATCHA LATTE AESTHETIC', 'PASTEL DREAMER', 'MELANCHOLY POET'],
+      vibes: [
+        `Gentle, dreamy desaturated hues centering ${top.name} over soft ${mid.name}.`,
+        `Approachable softness with a relaxed, contemporary edge.`
+      ],
+      wins: [
+        ['Gentle color harmony that radiates calm confidence', 'Modern genderless aesthetic with subtle flair', 'Muted tones that look great in daylight photos'],
+        ['Thoughtful pastel coordination', 'Delicate tonal subtlety', 'Unique visual softness without being loud']
+      ],
+      roasts: [
+        "You look like you host a podcast about feeling your feelings in a greenhouse.",
+        "Dressed like you're about to hand someone a lukewarm matcha latte and a handwritten letter.",
+        "Soft enough to be used as acoustic soundproofing paneling in a recording studio."
+      ],
+      upgrades: [
+        `Ground the soft ${top.name} with structured dark trousers or a heavy leather belt.`,
+        `Add a bold dark watch or sunglasses to keep the ${mid.name} from washing out completely.`
+      ],
+      verdicts: ['DELICATE MASTERPIECE.', 'SOFT AND INTENTIONAL.', 'PASTEL PURITY.']
+    },
+    'vibrant-accent': {
+      auras: ['STREET HEAT', 'CHROMATIC SHOCK', 'NEON SYNDICATE', 'SEOUL RUNWAY'],
+      vibes: [
+        `High-energy flash: ${top.name} cuts through the visual noise like a siren.`,
+        `Deliberate accent placement that refuses to be ignored.`
+      ],
+      wins: [
+        [`High-octane bravery centering ${top.name}`, 'Magnetic street presence with undeniable attitude', 'Strong focal point that draws immediate eyes'],
+        ['Audacious color confidence', 'Electric energy that cuts through gray cities', 'Playful modern pop-culture attitude']
+      ],
+      roasts: [
+        "You look like a pedestrian crossing guard who got a stylist from Highsnobiety.",
+        "One of you is wearing that bright piece, but we aren't sure if you're wearing it or it's wearing you.",
+        "Visibility 10/10. Air traffic control can track you from 30,000 feet."
+      ],
+      upgrades: [
+        `Let the ${top.name} be the only loud piece—keep every other garment dead neutral.`,
+        `Balance the saturation with washed black denim instead of bright footwear.`
+      ],
+      verdicts: ['ELECTRIC PRESENCE.', 'UNAPOLOGETICALLY LOUD.', 'RETINA MELTER.']
+    },
+    'clash': {
+      auras: ['CHAOS FACTORY', 'GARMENT THRIFT BLENDER', 'RADIOACTIVE CLOWN', 'ATTENTION CRISIS'],
+      vibes: [
+        `Auditory feedback loop in cloth form: ${top.name} and ${mid.name} in open warfare.`,
+        `Maximum chromatic saturation with zero mediation.`
+      ],
+      wins: [
+        ['Bravery is through the roof—nobody can accuse you of being boring', 'Supreme visibility in severe blizzard conditions', 'Fearless refusal to consult basic color wheels'],
+        ['Pure unfiltered self-expression', 'High visual decibels', 'Memorable for all the wrong reasons']
+      ],
+      roasts: [
+        "Your top and pants are currently filing restraining orders against each other.",
+        "You look like you got dressed in a room with a blown fuse and high optimism.",
+        "Looking like a toddler was given an unlimited budget in a candy store gift shop.",
+        "Your outfit looks like a graphic design student's corrupted Photoshop file."
+      ],
+      upgrades: [
+        `Swap the ${mid.name} immediately for pitch black or raw denim to save the ${top.name}.`,
+        `Pick ONE hero color and throw the other one into a dark closet until next festival season.`
+      ],
+      verdicts: ['CRIME AGAINST RETINAS.', 'CALL THE FASHION POLICE.', 'CHAOS UNCONTAINED.']
+    },
+    'complementary': {
+      auras: ['COLOR THEORY SAVANT', 'COMPLEMENTARY POP', 'CHROMATIC ACROBAT'],
+      vibes: [
+        `High color wheel tension balancing warm ${top.name} against cool ${mid.name}.`,
+        `Calculated chromatic polarity that makes both pieces vibrate with energy.`
+      ],
+      wins: [
+        [`Textbook opposite-hue tension between ${top.name} and ${mid.name}`, 'Energetic visual punch that stays balanced', 'Dynamic street style confidence'],
+        ['Smart chromatic discipline', 'Vibrant yet proportional', 'Standout color-blocking execution']
+      ],
+      roasts: [
+        "You look like an NBA franchise jersey from 1996 come to life.",
+        "Looking like an art school thesis on why opposite colors shouldn't be left alone together.",
+        "Bold enough to make primary school art teachers shed a tear of joy."
+      ],
+      upgrades: [
+        `Neutralize the footwear in ${bottom.name} so it doesn't create a third competing hue.`,
+        `Add a muted jacket to frame the ${top.name} and ${mid.name} color clash.`
+      ],
+      verdicts: ['OPTICAL CHEMISTRY.', 'VIBRANT AND BALANCED.', 'DYNAMIC POP.']
+    },
+    'balanced': {
+      auras: ['CASUAL MINIMALIST', 'SUBTLE CURATOR', 'OFF-HOURS STYLIST', 'URBAN MODULAR'],
+      vibes: [
+        `Easy, balanced coordination pairing ${top.name} with ${mid.name}.`,
+        `Clean everyday proportions with reliable color sensibility.`
+      ],
+      wins: [
+        [`Smooth transition from ${top.name} down through ${mid.name}`, 'Approachable everyday balance with no forced styling', 'Unpretentious, highly wearable rhythm'],
+        ['Clean silhouettes and grounded color flow', 'Effortlessly styled for casual comfort', 'Tasteful proportion play']
+      ],
+      roasts: [
+        "Clean, but safe enough to be used as a catalog photo for a direct-to-consumer basics brand.",
+        "You look like you asked your smart speaker what the weather was and dressed for the exact average.",
+        "Nobody is going to roast you, but nobody is going to stop you on the street either."
+      ],
+      upgrades: [
+        `Introduce one bold accessory—a sculptural bag, vintage cap, or statement watch—to elevate the look.`,
+        `Play with oversized or cropped proportions to take the ${top.name} from safe to editorial.`
+      ],
+      verdicts: ['EFFORTLESSLY WEARABLE.', 'CLEAN AND COMPOSED.', 'EVERYDAY ROTATION.']
+    }
+  };
 
-  switch (harmony.type) {
-    case 'monochrome':
-      if (top.l < 25 && mid.l < 25) {
-        aura = 'STREETWEAR PHANTOM';
-        vibe = `All-dark tonal execution anchored in deep ${top.name}.`;
-        wins = [
-          'Unforgiving all-black / dark-mode silhouette',
-          'Zero color friction — pure form and shape focus',
-          'Effortless evening or downtown street energy'
-        ];
-        roast = 'You dressed entirely in darkness hoping nobody would perceive you.';
-        upgrade = `Add a silver chain, watch, or an off-white undershirt hem to break the ${top.name} monolith.`;
-        verdict = 'VOID CHIC AT ITS FINEST.';
-      } else {
-        aura = 'TONAL MINIMALIST';
-        vibe = `Calm, low-contrast tonal harmony dominated by ${top.name}.`;
-        wins = [
-          'Cohesive monochrome spectrum',
-          'Soft, approachable tonal discipline',
-          'Relaxed proportions that breathe'
-        ];
-        roast = 'You look like you belong in an architectural firm brochure.';
-        upgrade = 'Introduce one leather or raw metallic accessory for tactile interest.';
-        verdict = 'SUBTLE AND INTENTIONAL.';
-      }
-      break;
+  const persona = PERSONA_BANK[harmony.type] || PERSONA_BANK['balanced'];
 
-    case 'high-contrast':
-      aura = 'HIGH-CONTRAST STATEMENT';
-      vibe = `Sharp graphical tension pairing ${top.name} against ${mid.name}.`;
-      wins = [
-        `Bold value separation between ${top.name} and ${mid.name}`,
-        'High-impact visual readability from across the room',
-        'Timeless color-blocking foundation'
-      ];
-      roast = "Looking like a walking Pantone swatch, but you're making it work.";
-      upgrade = `Ground the high contrast with minimalist footwear in ${bottom.name}.`;
-      verdict = 'CRISP GRAPHIC PERFECTION.';
-      break;
-
-    case 'earthy-contrast':
-      aura = 'QUIET LUXURY SCHOLAR';
-      vibe = `Rich organic balance centering ${top.name} against ${mid.name}.`;
-      wins = [
-        `Tasteful deployment of ${top.name} as the hero piece`,
-        `Solid neutral grounding from the ${mid.name} base`,
-        'Natural, lived-in aesthetic sophistication'
-      ];
-      roast = "You look ready to explain the nuances of pour-over coffee to anyone who didn't ask.";
-      upgrade = `Throw on a structured coat or canvas tote to elevate the ${top.name} tone.`;
-      verdict = 'NATURAL SOPHISTICATION.';
-      break;
-
-    case 'complementary':
-      aura = 'ELECTRIC POP';
-      vibe = `Dynamic color wheel tension pitting ${top.name} against ${mid.name}.`;
-      wins = [
-        `Adventurous complementary clash between ${top.name} and ${mid.name}`,
-        'High-energy confidence that commands attention',
-        'Youthful streetwear flair'
-      ];
-      roast = "You look like an extra on a fashion week live stream who refused to play it safe.";
-      upgrade = `Keep the shoes neutral to prevent ${bottom.name} from fighting the upper color duo.`;
-      verdict = 'AUDACIOUS AND MEMORABLE.';
-      break;
-
-    case 'clash':
-      aura = 'CHAOS MAXIMALIST';
-      vibe = `High-saturation overload where ${top.name} and ${mid.name} fight for dominance.`;
-      wins = [
-        'Fearless attitude toward bright pigments',
-        'Unmissable visibility in high-density crowds',
-        'Unconventional experimental energy'
-      ];
-      roast = 'Your outfit is currently having a heated group chat argument with itself.';
-      upgrade = `Swap either the ${top.name} or ${mid.name} for a muted Charcoal or Off-White to anchor the look.`;
-      verdict = 'LOUD BUT NEEDS DISCIPLINE.';
-      break;
-  }
+  const aura = persona.auras[hash % persona.auras.length];
+  const vibe = persona.vibes[hash % persona.vibes.length];
+  const wins = persona.wins[hash % persona.wins.length];
+  const roast = persona.roasts[hash % persona.roasts.length];
+  const upgrade = persona.upgrades[hash % persona.upgrades.length];
+  const verdict = persona.verdicts[hash % persona.verdicts.length];
 
   return {
-    score,
+    score: finalScore,
     aura,
     vibe,
     wins,
     roast,
     upgrade,
-    verdict
-  };
-}
-
-/**
- * Extract average color from a rectangular canvas sub-region
- */
-function sampleRegionColor(data, width, startY, endY, startX, endX) {
-  let rSum = 0;
-  let gSum = 0;
-  let bSum = 0;
-  let count = 0;
-
-  for (let y = startY; y < endY; y += 2) {
-    for (let x = startX; x < endX; x += 2) {
-      const idx = (y * width + x) * 4;
-      const a = data[idx + 3];
-      if (a > 50) { // Ignore transparent pixels
-        rSum += data[idx];
-        gSum += data[idx + 1];
-        bSum += data[idx + 2];
-        count++;
-      }
+    verdict,
+    detectedPalette: {
+      top: top.name,
+      mid: mid.name,
+      bottom: bottom.name
     }
-  }
-
-  if (count === 0) return { r: 128, g: 128, b: 128 };
-  return {
-    r: Math.round(rSum / count),
-    g: Math.round(gSum / count),
-    b: Math.round(bSum / count)
   };
 }
 
 /**
- * Measure edge density to detect busy patterns vs clean solids
+ * Measure edge density across image to distinguish solid flat fabrics from busy prints/patterns
  */
 function computeEdgeDensity(data, width, height) {
   let edgeSum = 0;
@@ -380,7 +579,7 @@ function computeEdgeDensity(data, width, height) {
   }
 
   const avgGradient = edgeSum / Math.max(1, samples);
-  return avgGradient > 18 ? 'busy' : 'clean';
+  return avgGradient > 19 ? 'busy' : 'clean';
 }
 
 /**
@@ -389,21 +588,26 @@ function computeEdgeDensity(data, width, height) {
 export function analyzeImageData(ctx, width, height) {
   const imgData = ctx.getImageData(0, 0, width, height).data;
 
-  // Center crop region (focus on garment, ignore peripheral background)
-  const startX = Math.floor(width * 0.20);
-  const endX = Math.floor(width * 0.80);
+  // 1. Detect background color from outer border perimeter (corners and outer edges)
+  const bg = extractDominantColor(imgData, width, 0, Math.floor(height * 0.12), 0, width);
 
-  // Vertical segmentation
+  // 2. Center crop region (focus on garment, ignore peripheral background)
+  const startX = Math.floor(width * 0.22);
+  const endX = Math.floor(width * 0.78);
+
+  // 3. Vertical segmentation with dominant histogram binning (ignoring background)
   // Top: 15% to 45% (Upper body / jacket / shirt)
-  const topRgb = sampleRegionColor(imgData, width, Math.floor(height * 0.15), Math.floor(height * 0.45), startX, endX);
+  const top = extractDominantColor(imgData, width, Math.floor(height * 0.15), Math.floor(height * 0.45), startX, endX, bg.name);
   // Mid: 45% to 75% (Trousers / waist / skirt)
-  const midRgb = sampleRegionColor(imgData, width, Math.floor(height * 0.45), Math.floor(height * 0.75), startX, endX);
-  // Bottom: 75% to 95% (Footwear / hemline)
-  const bottomRgb = sampleRegionColor(imgData, width, Math.floor(height * 0.75), Math.floor(height * 0.95), startX, endX);
+  const mid = extractDominantColor(imgData, width, Math.floor(height * 0.45), Math.floor(height * 0.75), startX, endX, bg.name);
+  // Bottom: 75% to 96% (Footwear / hemline)
+  const bottom = extractDominantColor(imgData, width, Math.floor(height * 0.75), Math.floor(height * 0.96), startX, endX, bg.name);
 
-  const top = getColorDescriptor(topRgb.r, topRgb.g, topRgb.b);
-  const mid = getColorDescriptor(midRgb.r, midRgb.g, midRgb.b);
-  const bottom = getColorDescriptor(bottomRgb.r, bottomRgb.g, bottomRgb.b);
+  // 4. Compute unique pixel signature to give each photo deterministic variety
+  let pixelHash = 0;
+  for (let i = 0; i < imgData.length; i += 64) {
+    pixelHash = (pixelHash * 33 + imgData[i]) | 0;
+  }
 
   const harmony = computeHarmony([top, mid, bottom]);
   const patternDensity = computeEdgeDensity(imgData, width, height);
@@ -413,7 +617,8 @@ export function analyzeImageData(ctx, width, height) {
     mid,
     bottom,
     harmony,
-    patternDensity
+    patternDensity,
+    pixelSignature: String(Math.abs(pixelHash))
   };
 }
 
@@ -441,7 +646,7 @@ export function judgeOutfit(imageSrc) {
         const critique = generateCritique(analysis);
 
         // Natural short pause for realistic feel
-        setTimeout(() => resolve(critique), 600);
+        setTimeout(() => resolve(critique), 450);
       } catch (err) {
         reject(err);
       }

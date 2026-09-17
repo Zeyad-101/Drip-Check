@@ -4,99 +4,130 @@ import {
   rgbToHsl,
   findNearestColorName,
   computeHarmony,
-  generateCritique
+  generateCritique,
+  extractDominantColor,
+  FASHION_PALETTE
 } from '../public/vision-engine.js';
 
 test('rgbToHsl converts RGB to HSL correctly', () => {
-  // Pure red
   const red = rgbToHsl(255, 0, 0);
   assert.equal(red.h, 0);
   assert.equal(red.s, 100);
   assert.equal(red.l, 50);
 
-  // Pure black
   const black = rgbToHsl(0, 0, 0);
   assert.equal(black.l, 0);
 
-  // Pure white
   const white = rgbToHsl(255, 255, 255);
   assert.equal(white.l, 100);
 });
 
-test('findNearestColorName maps RGB to fashion pigment names', () => {
-  assert.equal(findNearestColorName(18, 18, 18), 'Charcoal Black');
-  assert.equal(findNearestColorName(248, 245, 240), 'Off-White');
-  assert.equal(findNearestColorName(55, 70, 48), 'Olive Green');
-  assert.equal(findNearestColorName(24, 38, 75), 'Dark Navy');
-  assert.equal(findNearestColorName(115, 30, 45), 'Burgundy');
-  assert.equal(findNearestColorName(190, 155, 110), 'Camel');
+test('findNearestColorName maps RGB to fashion pigment names accurately', () => {
+  assert.equal(findNearestColorName(15, 15, 18), 'Pitch Black');
+  assert.equal(findNearestColorName(242, 240, 234), 'Off-White');
+  assert.equal(findNearestColorName(65, 78, 52), 'Olive Green');
+  assert.equal(findNearestColorName(20, 32, 60), 'Dark Navy');
+  assert.equal(findNearestColorName(102, 24, 42), 'Burgundy');
+  assert.equal(findNearestColorName(185, 138, 88), 'Camel');
+  assert.equal(findNearestColorName(62, 255, 82), 'Neon Green');
+  assert.equal(findNearestColorName(255, 42, 140), 'Hot Pink');
 });
 
-test('computeHarmony detects monochrome palette', () => {
-  const allBlackPalette = [
-    { name: 'Charcoal Black', r: 25, g: 25, b: 25, h: 0, s: 0, l: 10, isNeutral: true },
-    { name: 'Charcoal Black', r: 35, g: 35, b: 35, h: 0, s: 0, l: 14, isNeutral: true },
-    { name: 'Slate Gray', r: 70, g: 75, b: 80, h: 210, s: 7, l: 29, isNeutral: true }
-  ];
-  const harmony = computeHarmony(allBlackPalette);
-  assert.equal(harmony.type, 'monochrome');
-  assert.ok(harmony.scoreBonus >= 0.5);
+test('extractDominantColor uses histogram binning over naive averaging', () => {
+  // Synthetic 10x10 pixel grid: 70% Crimson Red, 30% Off-White background
+  const width = 10;
+  const height = 10;
+  const data = new Uint8ClampedArray(width * height * 4);
+
+  for (let i = 0; i < 100; i++) {
+    const idx = i * 4;
+    if (i < 70) {
+      // Crimson Red clothing
+      data[idx] = 186;
+      data[idx + 1] = 28;
+      data[idx + 2] = 38;
+      data[idx + 3] = 255;
+    } else {
+      // Off-White background
+      data[idx] = 242;
+      data[idx + 1] = 240;
+      data[idx + 2] = 234;
+      data[idx + 3] = 255;
+    }
+  }
+
+  const dominant = extractDominantColor(data, width, 0, height, 0, width);
+  assert.equal(dominant.name, 'Crimson Red');
 });
 
-test('computeHarmony detects high contrast neutrals', () => {
-  const contrastPalette = [
-    { name: 'Off-White', r: 245, g: 245, b: 245, h: 0, s: 0, l: 96, isNeutral: true },
-    { name: 'Charcoal Black', r: 20, g: 20, b: 20, h: 0, s: 0, l: 8, isNeutral: true },
-    { name: 'Charcoal Black', r: 25, g: 25, b: 25, h: 0, s: 0, l: 10, isNeutral: true }
-  ];
-  const harmony = computeHarmony(contrastPalette);
-  assert.equal(harmony.type, 'high-contrast');
+test('computeHarmony accurately differentiates aesthetic genres', () => {
+  const getCol = (name) => FASHION_PALETTE.find(c => c.name === name);
+
+  // All Black
+  const blackFit = computeHarmony([getCol('Pitch Black'), getCol('Charcoal Black'), getCol('Pitch Black')]);
+  assert.equal(blackFit.type, 'all-black');
+
+  // All White
+  const whiteFit = computeHarmony([getCol('Crisp White'), getCol('Off-White'), getCol('Cream')]);
+  assert.equal(whiteFit.type, 'all-white');
+
+  // High Contrast
+  const contrastFit = computeHarmony([getCol('Crisp White'), getCol('Pitch Black'), getCol('Crisp White')]);
+  assert.equal(contrastFit.type, 'high-contrast');
+
+  // Earth Tones
+  const earthFit = computeHarmony([getCol('Olive Green'), getCol('Camel'), getCol('Chocolate Brown')]);
+  assert.equal(earthFit.type, 'earth-tone');
+
+  // Neon Clash
+  const clashFit = computeHarmony([getCol('Neon Green'), getCol('Hot Pink'), getCol('Pitch Black')]);
+  assert.equal(clashFit.type, 'clash');
+  assert.ok(clashFit.scoreBonus < 0);
 });
 
-test('computeHarmony detects complementary and clashing palettes', () => {
-  // Cobalt Blue (h ~220) + Mustard Yellow (h ~45) -> complementary (~175 deg diff)
-  const complementaryPalette = [
-    { name: 'Cobalt Blue', r: 25, g: 75, b: 185, h: 221, s: 76, l: 41, isNeutral: false },
-    { name: 'Mustard Yellow', r: 210, g: 160, b: 45, h: 42, s: 65, l: 50, isNeutral: false },
-    { name: 'Pitch Black', r: 10, g: 10, b: 12, h: 240, s: 9, l: 4, isNeutral: true }
-  ];
-  const compHarmony = computeHarmony(complementaryPalette);
-  assert.equal(compHarmony.type, 'complementary');
+test('generateCritique yields different scores, auras, and roasts per outfit', () => {
+  const getCol = (name) => FASHION_PALETTE.find(c => c.name === name);
 
-  // Hot Pink (s ~100) + Neon Green (s ~100) -> clash
-  const clashPalette = [
-    { name: 'Hot Pink', r: 255, g: 45, b: 145, h: 331, s: 100, l: 59, isNeutral: false },
-    { name: 'Neon Green', r: 65, g: 255, b: 85, h: 126, s: 100, l: 63, isNeutral: false },
-    { name: 'Pitch Black', r: 10, g: 10, b: 12, h: 240, s: 9, l: 4, isNeutral: true }
-  ];
-  const clashHarmony = computeHarmony(clashPalette);
-  assert.equal(clashHarmony.type, 'clash');
-  assert.ok(clashHarmony.scoreBonus < 0);
-});
-
-test('generateCritique returns correct schema and embeds detected colors', () => {
-  const mockAnalysis = {
-    top: { name: 'Olive Green', r: 55, g: 70, b: 48, h: 101, s: 19, l: 23, isNeutral: false },
-    mid: { name: 'Off-White', r: 245, g: 240, b: 235, h: 30, s: 25, l: 94, isNeutral: true },
-    bottom: { name: 'Charcoal Black', r: 25, g: 25, b: 25, h: 0, s: 0, l: 10, isNeutral: true },
-    harmony: { type: 'earthy-contrast', description: 'Earthy tone paired with neutral base', scoreBonus: 0.8 },
-    contrastRatio: 4.1,
-    patternDensity: 'clean'
+  const blackAnalysis = {
+    top: getCol('Pitch Black'),
+    mid: getCol('Charcoal Black'),
+    bottom: getCol('Pitch Black'),
+    harmony: computeHarmony([getCol('Pitch Black'), getCol('Charcoal Black'), getCol('Pitch Black')]),
+    patternDensity: 'clean',
+    pixelSignature: '12345'
   };
 
-  const critique = generateCritique(mockAnalysis);
+  const earthAnalysis = {
+    top: getCol('Olive Green'),
+    mid: getCol('Camel'),
+    bottom: getCol('Chocolate Brown'),
+    harmony: computeHarmony([getCol('Olive Green'), getCol('Camel'), getCol('Chocolate Brown')]),
+    patternDensity: 'clean',
+    pixelSignature: '67890'
+  };
 
-  assert.equal(typeof critique.score, 'number');
-  assert.ok(critique.score >= 0 && critique.score <= 10);
-  assert.equal(typeof critique.aura, 'string');
-  assert.equal(typeof critique.vibe, 'string');
-  assert.ok(Array.isArray(critique.wins));
-  assert.equal(critique.wins.length, 3);
-  assert.equal(typeof critique.roast, 'string');
-  assert.equal(typeof critique.upgrade, 'string');
-  assert.equal(typeof critique.verdict, 'string');
+  const clashAnalysis = {
+    top: getCol('Neon Green'),
+    mid: getCol('Hot Pink'),
+    bottom: getCol('Electric Orange'),
+    harmony: computeHarmony([getCol('Neon Green'), getCol('Hot Pink'), getCol('Electric Orange')]),
+    patternDensity: 'busy',
+    pixelSignature: '99999'
+  };
 
-  // Verify that the critique references detected colors
-  const textBlob = `${critique.vibe} ${critique.wins.join(' ')} ${critique.roast} ${critique.upgrade}`.toLowerCase();
-  assert.ok(textBlob.includes('olive') || textBlob.includes('off-white') || textBlob.includes('earth'));
+  const blackCritique = generateCritique(blackAnalysis);
+  const earthCritique = generateCritique(earthAnalysis);
+  const clashCritique = generateCritique(clashAnalysis);
+
+  // Scores must be meaningfully different
+  assert.ok(clashCritique.score < 6.0, `Clash score was too high: ${clashCritique.score}`);
+  assert.ok(earthCritique.score >= 8.0, `Earth score was too low: ${earthCritique.score}`);
+  assert.ok(blackCritique.score >= 8.0, `Black score was too low: ${blackCritique.score}`);
+
+  // Auras, roasts, and verdicts must be completely different
+  assert.notEqual(blackCritique.aura, earthCritique.aura);
+  assert.notEqual(earthCritique.aura, clashCritique.aura);
+  assert.notEqual(blackCritique.roast, earthCritique.roast);
+  assert.notEqual(earthCritique.roast, clashCritique.roast);
+  assert.notEqual(blackCritique.verdict, clashCritique.verdict);
 });

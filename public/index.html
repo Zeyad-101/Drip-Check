@@ -85,6 +85,7 @@
     <section class="card" id="resultCard">
       <div class="score" id="score">—/10</div>
       <div class="aura" id="aura">AURA: ???</div>
+      <div class="palette-detected" id="paletteDetected" style="display:none; font-size: 13px; font-weight: 700; color: #222; background: #f0f0f0; padding: 7px 12px; border-radius: 8px; margin: 4px 0 14px; border: 1.5px solid #111;"></div>
       <p id="vibe">Your verdict will appear here.</p>
 
       <div class="section">
@@ -163,6 +164,8 @@
       dropText.style.display = 'block';
       judgeBtn.disabled = true;
       retakeBtn.style.display = 'none';
+      const palEl = document.getElementById('paletteDetected');
+      if (palEl) palEl.style.display = 'none';
     });
 
     judgeBtn.addEventListener('click', async () => {
@@ -178,6 +181,11 @@
         lastResult = data;
         document.getElementById('score').textContent = `${data.score}/10`;
         document.getElementById('aura').textContent = `AURA: ${data.aura}`;
+        if (data.detectedPalette) {
+          const palEl = document.getElementById('paletteDetected');
+          palEl.textContent = `🎯 Scanned: ${data.detectedPalette.top} top · ${data.detectedPalette.mid} bottom · ${data.detectedPalette.bottom} shoes`;
+          palEl.style.display = 'block';
+        }
         document.getElementById('vibe').textContent = data.vibe;
         document.getElementById('wins').innerHTML = data.wins.map(x => `<li>${escapeHtml(x)}</li>`).join('');
         document.getElementById('roast').textContent = data.roast;
