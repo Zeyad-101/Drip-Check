@@ -97,6 +97,21 @@ export function colorDistance(r1, g1, b1, r2, g2, b2) {
  * Find closest matching color from the fashion palette
  */
 export function findNearestColor(r, g, b) {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const chroma = max - min;
+  const lum = (r + g + b) / 3;
+
+  // Accurately map low-chroma / neutral apparel (black, charcoal, grays, whites)
+  if (chroma < 22) {
+    if (lum < 26) return FASHION_PALETTE.find(c => c.name === 'Pitch Black');
+    if (lum < 65) return FASHION_PALETTE.find(c => c.name === 'Charcoal Black');
+    if (lum < 125) return FASHION_PALETTE.find(c => c.name === 'Slate Gray');
+    if (lum < 195) return FASHION_PALETTE.find(c => c.name === 'Cool Gray');
+    if (lum < 245) return FASHION_PALETTE.find(c => c.name === 'Off-White');
+    return FASHION_PALETTE.find(c => c.name === 'Crisp White');
+  }
+
   let closest = FASHION_PALETTE[0];
   let minDistance = Infinity;
 
@@ -119,16 +134,17 @@ export function findNearestColorName(r, g, b) {
  * Detect if an RGB pixel is a human skin tone
  */
 export function isSkinTone(r, g, b) {
-  // Covers diverse human skin tones from pale to deep brown under daylight
+  // Covers diverse human skin tones while rejecting wood, pavement, bread, and bricks
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
-  return (
-    r > 45 && g > 28 && b > 15 &&
-    r >= g && g >= b &&
-    (r - g) >= 6 &&
-    (max - min) >= 10 &&
-    r < 252
-  );
+  const diff = max - min;
+  if (diff < 10 || diff > 105) return false;
+  if (r < 75 || g < 42 || b < 25) return false;
+  if (r <= g || g < b) return false;
+  if ((r - g) < 7) return false;
+  const s = diff / max;
+  if (s < 0.10 || s > 0.70) return false;
+  return true;
 }
 
 /**
@@ -215,7 +231,7 @@ export function detectHumanSubject(data, width, height) {
   if (currentCluster) clusters.push(currentCluster);
 
   if (clusters.length === 0) {
-    return { hasHuman: false, headY: 0, bodyEndY: height, skinCount: 0 };
+    return { hasHuman: false, headY: 0, faceEndY: 0, bodyEndY: height, skinCount: 0 };
   }
 
   // Pick the largest cluster (the actual human subject, not background noise like straw)
@@ -225,7 +241,8 @@ export function detectHumanSubject(data, width, height) {
   return {
     hasHuman: true,
     headY: main.startY,
-    bodyEndY: Math.min(height, main.endY + Math.floor(height * 0.2)),
+    faceEndY: main.endY,
+    bodyEndY: Math.min(height, main.endY + Math.floor(height * 0.5)),
     skinCount: main.totalSkin
   };
 }
@@ -236,29 +253,46 @@ export function detectHumanSubject(data, width, height) {
 export function checkIsShirtless(data, width, height, subject) {
   if (!subject.hasHuman) return false;
 
-  // Chest/Torso is immediately below the face: headY + 12 to headY + 45
-  const torsoStartY = Math.min(height - 10, subject.headY + 12);
-  const torsoEndY = Math.min(height, subject.headY + 45);
+  const faceHeight = Math.max(4, Math.floor(height * 0.12));
+  const torsoStartY = Math.min(height - 4, subject.headY + faceHeight);
+  const torsoEndY = Math.min(height - 1, torsoStartY + Math.max(6, Math.floor(height * 0.25)));
+  if (torsoEndY <= torsoStartY) return false;
 
-  const startX = Math.floor(width * 0.22);
-  const endX = Math.floor(width * 0.78);
+  // Focus on the central torso core to ignore background walls/windows on the sides
+  const startX = Math.floor(width * 0.30);
+  const endX = Math.floor(width * 0.70);
 
   let totalPixels = 0;
   let skinPixels = 0;
+  let darkFabricPixels = 0;
 
   for (let y = torsoStartY; y < torsoEndY; y++) {
     for (let x = startX; x < endX; x++) {
       const idx = (y * width + x) * 4;
+      const a = data[idx + 3];
+      if (a < 50) continue;
+
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
       totalPixels++;
-      if (isSkinTone(data[idx], data[idx + 1], data[idx + 2])) {
+      if (isSkinTone(r, g, b)) {
         skinPixels++;
+      } else if (r < 65 && g < 65 && b < 65) {
+        darkFabricPixels++;
       }
     }
   }
 
   if (totalPixels === 0) return false;
-  const ratio = skinPixels / totalPixels;
-  return ratio > 0.25;
+  const darkRatio = darkFabricPixels / totalPixels;
+  const skinRatio = skinPixels / totalPixels;
+
+  // If dark fabric (e.g. black jersey, dark hoodie) is present (> 18%), definitely NOT shirtless
+  if (darkRatio > 0.18) return false;
+
+  // Shirtless requires strong dominant skin in the chest core (>= 30%)
+  return skinRatio >= 0.30;
 }
 
 /**
@@ -785,8 +819,8 @@ export function analyzeImageData(ctx, width, height, aiGarments = null) {
     : checkIsShirtless(imgData, width, height, subject);
 
   // 3. Center crop region (focus on garment, ignore peripheral background)
-  const startX = Math.floor(width * 0.22);
-  const endX = Math.floor(width * 0.78);
+  const startX = Math.floor(width * 0.30);
+  const endX = Math.floor(width * 0.70);
 
   // 4. Anchor vertical zones to where the human is actually located
   let topStartY, topEndY, midStartY, midEndY, bottomStartY, bottomEndY;

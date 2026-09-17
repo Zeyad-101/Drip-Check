@@ -3,14 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DRIP CHECK — AI Outfit & Aura Rater</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="favicon.png" />
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <style>
-    :root { font-family: Inter, system-ui, sans-serif; color: #111; background: #f5f5f5; }
+    :root { font-family: Inter, system-ui, sans-serif; color: #111; background: #f5f5f5; --accent: #ceea41; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
     .app { width: min(980px, 100%); display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
     .card { background: white; border: 2px solid #111; border-radius: 24px; padding: 24px; box-shadow: 8px 8px 0 #111; }
+    .brand { margin: 0 0 16px; }
+    .logo-img { max-width: 250px; width: 100%; height: auto; display: block; }
     h1 { font-size: clamp(40px, 7vw, 76px); line-height: .9; margin: 0 0 14px; letter-spacing: -0.06em; }
     .sub { margin: 0 0 22px; color: #555; }
 
@@ -65,7 +71,9 @@
 <body>
   <main class="app">
     <section class="card">
-      <h1>DRIP<br>CHECK.</h1>
+      <h1 class="brand">
+        <img src="logo.png" alt="DRIP CHECK" class="logo-img" />
+      </h1>
       <p class="sub">Upload a fit. Let the AI rate your aura.</p>
 
       <label class="drop" for="photo" id="dropZone">
@@ -110,7 +118,7 @@
   </main>
 
   <script type="module">
-    import { judgeOutfit } from './vision-engine.js?v=20260917_09';
+    import { judgeOutfit } from './vision-engine.js?v=20260917_11';
 
     let netModel = null;
     if (typeof mobilenet !== 'undefined') {

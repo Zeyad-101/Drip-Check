@@ -215,3 +215,55 @@ test('parsePredictions correctly categorizes jersey and prevents shirtless class
   assert.equal(parsedBeach.isSwimwearOrBeach, true);
   assert.equal(parsedBeach.hasTopGarment, false);
 });
+
+test('findNearestColor maps low-chroma neutral shades to black and gray rather than olive', () => {
+  // Dark fabric shadow (53, 53, 60) should be Charcoal Black
+  assert.equal(findNearestColorName(53, 53, 60), 'Charcoal Black');
+  // Cool charcoal (35, 36, 40) should be Charcoal Black
+  assert.equal(findNearestColorName(35, 36, 40), 'Charcoal Black');
+  // Slate gray (90, 94, 100) should be Slate Gray
+  assert.equal(findNearestColorName(90, 94, 100), 'Slate Gray');
+});
+
+test('checkIsShirtless returns false when torso has dark fabric, even with warm background', () => {
+  const width = 20;
+  const height = 40;
+  const data = new Uint8ClampedArray(width * height * 4);
+
+  // Background: rows 0-15 (storefront glass/wall)
+  for (let y = 0; y < 15; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      data[idx] = 45; data[idx + 1] = 42; data[idx + 2] = 38; data[idx + 3] = 255;
+    }
+  }
+
+  // Face: rows 16-20 (human face)
+  for (let y = 16; y <= 20; y++) {
+    for (let x = 7; x < 13; x++) {
+      const idx = (y * width + x) * 4;
+      data[idx] = 190; data[idx + 1] = 135; data[idx + 2] = 95; data[idx + 3] = 255;
+    }
+  }
+
+  // Torso: rows 21-35 (Black football jersey)
+  for (let y = 21; y < 35; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      if (x >= 6 && x <= 14) {
+        // Black jersey
+        data[idx] = 25; data[idx + 1] = 25; data[idx + 2] = 30; data[idx + 3] = 255;
+      } else {
+        // Storefront wood on sides
+        data[idx] = 85; data[idx + 1] = 70; data[idx + 2] = 55; data[idx + 3] = 255;
+      }
+    }
+  }
+
+  const subject = detectHumanSubject(data, width, height);
+  assert.equal(subject.hasHuman, true);
+  assert.equal(subject.headY, 16);
+
+  const isShirtless = checkIsShirtless(data, width, height, subject);
+  assert.equal(isShirtless, false, 'Black jersey torso must not be marked shirtless');
+});
