@@ -132,6 +132,49 @@ export function isSkinTone(r, g, b) {
 }
 
 /**
+ * Parse predictions from TensorFlow.js MobileNet to recognize garments and settings
+ */
+export function parsePredictions(predictions = []) {
+  const result = {
+    hasTopGarment: false,
+    topGarmentType: null,
+    isSwimwearOrBeach: false,
+    isSportswear: false,
+    isFormal: false,
+    rawTopMatch: null,
+    predictions
+  };
+
+  const text = predictions.map(p => (p.className || '').toLowerCase()).join(' ');
+
+  if (text.includes('jersey') || text.includes('football helmet') || text.includes('rugby ball')) {
+    result.hasTopGarment = true;
+    result.topGarmentType = 'jersey';
+    result.isSportswear = true;
+    result.rawTopMatch = 'Jersey';
+  } else if (text.includes('sweatshirt') || text.includes('hoodie')) {
+    result.hasTopGarment = true;
+    result.topGarmentType = 'sweatshirt';
+    result.rawTopMatch = 'Sweatshirt';
+  } else if (text.includes('suit') || text.includes('tuxedo') || text.includes('trench coat') || text.includes('blazer')) {
+    result.hasTopGarment = true;
+    result.topGarmentType = 'suit';
+    result.isFormal = true;
+    result.rawTopMatch = 'Tailored Suit';
+  } else if (text.includes('t-shirt') || text.includes('tee shirt') || text.includes('shirt') || text.includes('cardigan') || text.includes('vestment') || text.includes('apron')) {
+    result.hasTopGarment = true;
+    result.topGarmentType = 'shirt';
+    result.rawTopMatch = 'Shirt';
+  }
+
+  if (text.includes('seashore') || text.includes('coast') || text.includes('bathing trunks') || text.includes('swimming trunks') || text.includes('bikini') || text.includes('sandbar')) {
+    result.isSwimwearOrBeach = true;
+  }
+
+  return result;
+}
+
+/**
  * Locate human subject in the frame by finding the dominant contiguous skin cluster
  */
 export function detectHumanSubject(data, width, height) {
@@ -410,6 +453,27 @@ export function generateCritique(analysis) {
 
   // Persona Banks
   const PERSONA_BANK = {
+    'jersey': {
+      auras: ['GRIDIRON STREETWEAR', 'VINTAGE ATHLETIC', 'ALL-STAR OVERSIZED', 'DOWNTOWN PLAYMAKER'],
+      vibes: [
+        `Bold oversized jersey styling paired with relaxed street proportions.`,
+        `Vintage athletic statement with confident streetwear silhouette.`
+      ],
+      wins: [
+        ['Authentic athletic streetwear drape and volume', 'Clean torso graphic balance', 'Effortless vintage street credibility'],
+        ['Bold typography statement with zero clutter', 'Proportional wide-leg framing', 'Standout downtown presence']
+      ],
+      roasts: [
+        "Looking like you got drafted in the first round of the downtown thrift draft.",
+        "One touchdown away from giving a post-game press conference about your outfit.",
+        "Ready to call plays at a casual weekend coffee run."
+      ],
+      upgrades: [
+        `Anchor the wide-leg pants with chunky retro sneakers or clean monochromatic skate shoes.`,
+        `Layer a slim silver chain over the collar to lean further into vintage streetwear.`
+      ],
+      verdicts: ['ALL-STAR STREETWEAR.', 'PRO DRAFT SELECTION.', 'GRIDIRON PERFECTION.']
+    },
     'shirtless': {
       auras: ['TARZAN PROTOCOL', 'BARE CHEST BANDIT', 'SOLAR POWERED DRIP', 'BEACH BUM DRIFT', 'GYM BRO AT LARGE'],
       vibes: [
@@ -707,7 +771,7 @@ function computeEdgeDensity(data, width, height) {
 /**
  * Analyze an HTML5 Canvas context containing the outfit photo
  */
-export function analyzeImageData(ctx, width, height) {
+export function analyzeImageData(ctx, width, height, aiGarments = null) {
   const imgData = ctx.getImageData(0, 0, width, height).data;
 
   // 1. Detect background color from outer border perimeter (corners and outer edges)
@@ -715,7 +779,10 @@ export function analyzeImageData(ctx, width, height) {
 
   // 2. Locate human subject in frame and detect shirtless torso
   const subject = detectHumanSubject(imgData, width, height);
-  const isShirtless = checkIsShirtless(imgData, width, height, subject);
+  // If neural model detected a shirt/jersey/hoodie/suit, it is strictly not shirtless
+  const isShirtless = (aiGarments && aiGarments.hasTopGarment)
+    ? false
+    : checkIsShirtless(imgData, width, height, subject);
 
   // 3. Center crop region (focus on garment, ignore peripheral background)
   const startX = Math.floor(width * 0.22);
@@ -765,12 +832,20 @@ export function analyzeImageData(ctx, width, height) {
     };
   } else {
     top = extractDominantColor(imgData, width, topStartY, topEndY, startX, endX, bg.name);
+    if (aiGarments && aiGarments.topGarmentType === 'jersey') {
+      top.name = `${top.name} Jersey`;
+      harmony = {
+        type: 'jersey',
+        label: 'Vintage Sportswear Statement',
+        scoreBonus: 1.4
+      };
+    }
   }
 
   const mid = extractDominantColor(imgData, width, midStartY, midEndY, startX, endX, bg.name);
   const bottom = extractDominantColor(imgData, width, bottomStartY, bottomEndY, startX, endX, bg.name);
 
-  if (!isShirtless) {
+  if (!harmony) {
     harmony = computeHarmony([top, mid, bottom]);
   }
 
@@ -789,14 +864,15 @@ export function analyzeImageData(ctx, width, height) {
     harmony,
     patternDensity,
     pixelSignature: String(Math.abs(pixelHash)),
-    isShirtless
+    isShirtless,
+    aiGarments
   };
 }
 
 /**
  * In-browser runner: Takes an image source (data URL / object URL) and produces critique
  */
-export function judgeOutfit(imageSrc) {
+export function judgeOutfit(imageSrc, model = null) {
   return new Promise((resolve, reject) => {
     if (typeof window === 'undefined') {
       return reject(new Error('judgeOutfit must run in a browser environment.'));
@@ -804,8 +880,19 @@ export function judgeOutfit(imageSrc) {
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => {
+    img.onload = async () => {
       try {
+        let aiGarments = null;
+        const net = model || (typeof window !== 'undefined' && window.aiMobilenetModel);
+        if (net) {
+          try {
+            const preds = await net.classify(img);
+            aiGarments = parsePredictions(preds);
+          } catch (e) {
+            console.warn('MobileNet classification error:', e);
+          }
+        }
+
         const canvas = document.createElement('canvas');
         const size = 128;
         canvas.width = size;
@@ -813,10 +900,9 @@ export function judgeOutfit(imageSrc) {
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(img, 0, 0, size, size);
 
-        const analysis = analyzeImageData(ctx, size, size);
+        const analysis = analyzeImageData(ctx, size, size, aiGarments);
         const critique = generateCritique(analysis);
 
-        // Natural short pause for realistic feel
         setTimeout(() => resolve(critique), 450);
       } catch (err) {
         reject(err);

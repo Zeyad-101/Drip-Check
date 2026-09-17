@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DripCheck</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <style>
     :root { font-family: Inter, system-ui, sans-serif; color: #111; background: #f5f5f5; }
     * { box-sizing: border-box; }
@@ -109,7 +110,15 @@
   </main>
 
   <script type="module">
-    import { judgeOutfit } from './vision-engine.js?v=20260917_07';
+    import { judgeOutfit } from './vision-engine.js?v=20260917_09';
+
+    let netModel = null;
+    if (typeof mobilenet !== 'undefined') {
+      mobilenet.load({ version: 2, alpha: 1.0 }).then(m => {
+        netModel = m;
+        window.aiMobilenetModel = m;
+      }).catch(e => console.warn('MobileNet load:', e));
+    }
 
     const photo = document.getElementById('photo');
     const dropZone = document.getElementById('dropZone');
@@ -176,7 +185,13 @@
       shareBtn.style.display = 'none';
 
       try {
-        const data = await judgeOutfit(imageData);
+        if (!netModel && typeof mobilenet !== 'undefined') {
+          try {
+            netModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+            window.aiMobilenetModel = netModel;
+          } catch {}
+        }
+        const data = await judgeOutfit(imageData, netModel);
 
         lastResult = data;
         document.getElementById('score').textContent = `${data.score}/10`;

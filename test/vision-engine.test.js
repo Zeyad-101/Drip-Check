@@ -8,6 +8,7 @@ import {
   extractDominantColor,
   detectHumanSubject,
   checkIsShirtless,
+  parsePredictions,
   FASHION_PALETTE
 } from '../public/vision-engine.js';
 
@@ -193,4 +194,24 @@ test('generateCritique delivers shirtless roast and score', () => {
   );
   assert.ok(critique.roast.toLowerCase().includes('shirt') || critique.roast.toLowerCase().includes('clothing'));
   assert.ok(critique.upgrade.toLowerCase().includes('shirt'));
+});
+test('parsePredictions correctly categorizes jersey and prevents shirtless classification', () => {
+  const jerseyPredictions = [
+    { className: 'jersey, T-shirt', probability: 0.85 },
+    { className: 'sweatshirt', probability: 0.12 }
+  ];
+
+  const parsed = parsePredictions(jerseyPredictions);
+  assert.equal(parsed.hasTopGarment, true);
+  assert.equal(parsed.topGarmentType, 'jersey');
+  assert.equal(parsed.isSportswear, true);
+
+  const beachPredictions = [
+    { className: 'seashore, coast', probability: 0.72 },
+    { className: 'swimming trunks', probability: 0.45 }
+  ];
+
+  const parsedBeach = parsePredictions(beachPredictions);
+  assert.equal(parsedBeach.isSwimwearOrBeach, true);
+  assert.equal(parsedBeach.hasTopGarment, false);
 });
