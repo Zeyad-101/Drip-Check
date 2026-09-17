@@ -116,15 +116,91 @@ export function findNearestColorName(r, g, b) {
 }
 
 /**
- * Detect if an RGB pixel is a human skin tone to avoid treating skin as clothing
+ * Detect if an RGB pixel is a human skin tone
  */
 export function isSkinTone(r, g, b) {
+  // Covers diverse human skin tones from pale to deep brown under daylight
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
   return (
-    r > 75 && g > 40 && b > 25 &&
-    r > g && g > b &&
-    (r - g) >= 12 && (r - b) >= 18 &&
-    r < 240
+    r > 45 && g > 28 && b > 15 &&
+    r >= g && g >= b &&
+    (r - g) >= 6 &&
+    (max - min) >= 10 &&
+    r < 252
   );
+}
+
+/**
+ * Locate human subject in the frame by finding skin/contrast clusters
+ */
+export function detectHumanSubject(data, width, height) {
+  let minSkinY = height;
+  let maxSkinY = 0;
+  let skinCount = 0;
+  const skinPerLine = new Array(height).fill(0);
+
+  // Scan center column (20% to 80% width)
+  const startX = Math.floor(width * 0.20);
+  const endX = Math.floor(width * 0.80);
+
+  for (let y = 0; y < height; y++) {
+    for (let x = startX; x < endX; x++) {
+      const idx = (y * width + x) * 4;
+      if (isSkinTone(data[idx], data[idx + 1], data[idx + 2])) {
+        skinCount++;
+        skinPerLine[y]++;
+        if (y < minSkinY) minSkinY = y;
+        if (y > maxSkinY) maxSkinY = y;
+      }
+    }
+  }
+
+  const hasHuman = skinCount > (width * height * 0.015);
+  return {
+    hasHuman,
+    skinCount,
+    minSkinY: hasHuman ? minSkinY : Math.floor(height * 0.15),
+    maxSkinY: hasHuman ? maxSkinY : Math.floor(height * 0.90),
+    skinPerLine
+  };
+}
+
+/**
+ * Check if the torso is bare skin (shirtless)
+ */
+export function checkIsShirtless(data, width, height, subject) {
+  if (!subject.hasHuman) return false;
+
+  // Torso is typically below the head/face: from minSkinY + 12% to minSkinY + 38% of height
+  const torsoStartY = Math.min(height - 15, Math.floor(subject.minSkinY + height * 0.10));
+  const torsoEndY = Math.min(height - 2, Math.floor(subject.minSkinY + height * 0.40));
+
+  if (torsoEndY <= torsoStartY) return false;
+
+  const startX = Math.floor(width * 0.28);
+  const endX = Math.floor(width * 0.72);
+
+  let torsoPixels = 0;
+  let torsoSkinPixels = 0;
+
+  for (let y = torsoStartY; y < torsoEndY; y += 2) {
+    for (let x = startX; x < endX; x += 2) {
+      const idx = (y * width + x) * 4;
+      if (data[idx + 3] > 50) {
+        torsoPixels++;
+        if (isSkinTone(data[idx], data[idx + 1], data[idx + 2])) {
+          torsoSkinPixels++;
+        }
+      }
+    }
+  }
+
+  if (torsoPixels === 0) return false;
+  const torsoSkinRatio = torsoSkinPixels / torsoPixels;
+
+  // If over 28% of the torso region is bare skin, the subject is shirtless
+  return torsoSkinRatio > 0.28;
 }
 
 /**
@@ -310,10 +386,41 @@ export function generateCritique(analysis) {
 
   // Introduce small realistic decimal variation based on image signature (e.g. 7.9, 8.4, 9.2)
   const decimalJitter = ((hash % 7) - 3) * 0.1;
-  const finalScore = Math.min(9.8, Math.max(4.2, Math.round((baseScore + decimalJitter) * 10) / 10));
+  let finalScore;
+  if (harmony.type === 'shirtless') {
+    finalScore = Math.min(4.5, Math.max(2.4, Math.round((3.2 + decimalJitter) * 10) / 10));
+  } else {
+    finalScore = Math.min(9.8, Math.max(4.2, Math.round((baseScore + decimalJitter) * 10) / 10));
+  }
 
   // Persona Banks
   const PERSONA_BANK = {
+    'shirtless': {
+      auras: ['TARZAN PROTOCOL', 'BARE CHEST BANDIT', 'SOLAR POWERED DRIP', 'BEACH BUM DRIFT', 'GYM BRO AT LARGE'],
+      vibes: [
+        'Zero upper-body fabric detected — you are completely shirtless.',
+        'Maximum skin exposure with zero garments on the upper half.',
+        'Vitamin D overload: bold beach confidence, minus the actual outfit.'
+      ],
+      wins: [
+        ['100% maximum Vitamin D synthesis', 'Zero laundry generated for the top half', 'Unapologetic summer confidence'],
+        ['Total resistance to overheating', 'Saved $50 on a designer t-shirt', 'Optimal beach energy'],
+        ['Zero upper fabric friction', 'Natural tan line development', 'Direct solar charging']
+      ],
+      roasts: [
+        "Bro took 'traveling light' so literally he completely forgot to put on a shirt.",
+        "Hard to rate your drip when you're wearing 50% less clothing than a lifeguard.",
+        "Can't get roasted for a terrible t-shirt if you don't wear one. Truly a galaxy brain move.",
+        "Looking like you are one fresh coconut away from declaring yourself king of the island.",
+        "You uploaded a shirtless photo to an outfit rating app. The audacity is inspiring."
+      ],
+      upgrades: [
+        "Literally put on any shirt. An open linen camp-collar shirt would immediately jump your score by +4 points.",
+        "Throw on a relaxed crochet shirt or a crisp white tank to turn 'forgot my clothes' into intentional beach style.",
+        "Even draping a lightweight overshirt over your shoulders would give this an instant aesthetic upgrade."
+      ],
+      verdicts: ['PUT A SHIRT ON.', 'NO SHIRT, NO DRIP.', 'VITAMIN D OVERLOAD.', 'BEACH BUM ENERGY.']
+    },
     'all-black': {
       auras: ['VOID PHANTOM', 'CYBERPUNK STEALTH', 'MIDNIGHT PROTOCOL', 'SUB-BASS MINIMALIST', 'BERLIN NIGHTCLUB ARCHITECT'],
       vibes: [
@@ -591,26 +698,74 @@ export function analyzeImageData(ctx, width, height) {
   // 1. Detect background color from outer border perimeter (corners and outer edges)
   const bg = extractDominantColor(imgData, width, 0, Math.floor(height * 0.12), 0, width);
 
-  // 2. Center crop region (focus on garment, ignore peripheral background)
+  // 2. Locate human subject in frame and detect shirtless torso
+  const subject = detectHumanSubject(imgData, width, height);
+  const isShirtless = checkIsShirtless(imgData, width, height, subject);
+
+  // 3. Center crop region (focus on garment, ignore peripheral background)
   const startX = Math.floor(width * 0.22);
   const endX = Math.floor(width * 0.78);
 
-  // 3. Vertical segmentation with dominant histogram binning (ignoring background)
-  // Top: 15% to 45% (Upper body / jacket / shirt)
-  const top = extractDominantColor(imgData, width, Math.floor(height * 0.15), Math.floor(height * 0.45), startX, endX, bg.name);
-  // Mid: 45% to 75% (Trousers / waist / skirt)
-  const mid = extractDominantColor(imgData, width, Math.floor(height * 0.45), Math.floor(height * 0.75), startX, endX, bg.name);
-  // Bottom: 75% to 96% (Footwear / hemline)
-  const bottom = extractDominantColor(imgData, width, Math.floor(height * 0.75), Math.floor(height * 0.96), startX, endX, bg.name);
+  // 4. Anchor vertical zones to where the human is actually located
+  let topStartY, topEndY, midStartY, midEndY, bottomStartY, bottomEndY;
 
-  // 4. Compute unique pixel signature to give each photo deterministic variety
+  if (subject.hasHuman) {
+    const personTop = Math.max(0, Math.floor(subject.minSkinY + height * 0.10));
+    const personBottom = Math.min(height, Math.floor(subject.maxSkinY + height * 0.25));
+    const bodyHeight = Math.max(25, personBottom - personTop);
+
+    topStartY = personTop;
+    topEndY = Math.min(height - 10, Math.floor(personTop + bodyHeight * 0.45));
+
+    midStartY = topEndY;
+    midEndY = Math.min(height - 5, Math.floor(personTop + bodyHeight * 0.82));
+
+    bottomStartY = midEndY;
+    bottomEndY = Math.min(height, personBottom);
+  } else {
+    topStartY = Math.floor(height * 0.15);
+    topEndY = Math.floor(height * 0.45);
+    midStartY = Math.floor(height * 0.45);
+    midEndY = Math.floor(height * 0.75);
+    bottomStartY = Math.floor(height * 0.75);
+    bottomEndY = Math.floor(height * 0.96);
+  }
+
+  let top, harmony;
+
+  if (isShirtless) {
+    top = {
+      name: 'Bare Skin (No Shirt)',
+      category: 'skin',
+      isDark: false,
+      isLight: false,
+      s: 45,
+      l: 50,
+      h: 25
+    };
+    harmony = {
+      type: 'shirtless',
+      label: 'Shirtless / No Shirt',
+      scoreBonus: -4.2
+    };
+  } else {
+    top = extractDominantColor(imgData, width, topStartY, topEndY, startX, endX, bg.name);
+  }
+
+  const mid = extractDominantColor(imgData, width, midStartY, midEndY, startX, endX, bg.name);
+  const bottom = extractDominantColor(imgData, width, bottomStartY, bottomEndY, startX, endX, bg.name);
+
+  if (!isShirtless) {
+    harmony = computeHarmony([top, mid, bottom]);
+  }
+
+  const patternDensity = computeEdgeDensity(imgData, width, height);
+
+  // Compute unique pixel signature
   let pixelHash = 0;
   for (let i = 0; i < imgData.length; i += 64) {
     pixelHash = (pixelHash * 33 + imgData[i]) | 0;
   }
-
-  const harmony = computeHarmony([top, mid, bottom]);
-  const patternDensity = computeEdgeDensity(imgData, width, height);
 
   return {
     top,
@@ -618,7 +773,8 @@ export function analyzeImageData(ctx, width, height) {
     bottom,
     harmony,
     patternDensity,
-    pixelSignature: String(Math.abs(pixelHash))
+    pixelSignature: String(Math.abs(pixelHash)),
+    isShirtless
   };
 }
 

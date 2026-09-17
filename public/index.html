@@ -183,7 +183,11 @@
         document.getElementById('aura').textContent = `AURA: ${data.aura}`;
         if (data.detectedPalette) {
           const palEl = document.getElementById('paletteDetected');
-          palEl.textContent = `🎯 Scanned: ${data.detectedPalette.top} top · ${data.detectedPalette.mid} bottom · ${data.detectedPalette.bottom} shoes`;
+          if (data.detectedPalette.top.includes('Shirtless') || data.detectedPalette.top.includes('Bare Skin')) {
+            palEl.textContent = `🎯 Scanned: ${data.detectedPalette.top} · ${data.detectedPalette.mid} bottom`;
+          } else {
+            palEl.textContent = `🎯 Scanned: ${data.detectedPalette.top} top · ${data.detectedPalette.mid} bottom · ${data.detectedPalette.bottom} shoes`;
+          }
           palEl.style.display = 'block';
         }
         document.getElementById('vibe').textContent = data.vibe;

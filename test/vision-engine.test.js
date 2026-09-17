@@ -6,6 +6,8 @@ import {
   computeHarmony,
   generateCritique,
   extractDominantColor,
+  detectHumanSubject,
+  checkIsShirtless,
   FASHION_PALETTE
 } from '../public/vision-engine.js';
 
@@ -130,4 +132,65 @@ test('generateCritique yields different scores, auras, and roasts per outfit', (
   assert.notEqual(blackCritique.roast, earthCritique.roast);
   assert.notEqual(earthCritique.roast, clashCritique.roast);
   assert.notEqual(blackCritique.verdict, clashCritique.verdict);
+});
+
+test('detectHumanSubject and checkIsShirtless accurately identify shirtless photo', () => {
+  const width = 20;
+  const height = 40;
+  const data = new Uint8ClampedArray(width * height * 4);
+
+  // Background: rows 0-15 (sky/umbrella)
+  for (let y = 0; y < 15; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      data[idx] = 200; data[idx + 1] = 220; data[idx + 2] = 240; data[idx + 3] = 255; // Sky blue
+    }
+  }
+
+  // Face/Head: rows 16-20 (skin)
+  for (let y = 16; y < 20; y++) {
+    for (let x = 6; x < 14; x++) {
+      const idx = (y * width + x) * 4;
+      data[idx] = 190; data[idx + 1] = 135; data[idx + 2] = 95; data[idx + 3] = 255; // Tan skin
+    }
+  }
+
+  // Chest/Torso: rows 21-32 (bare skin)
+  for (let y = 21; y < 32; y++) {
+    for (let x = 5; x < 15; x++) {
+      const idx = (y * width + x) * 4;
+      data[idx] = 195; data[idx + 1] = 140; data[idx + 2] = 100; data[idx + 3] = 255; // Tan skin
+    }
+  }
+
+  const subject = detectHumanSubject(data, width, height);
+  assert.equal(subject.hasHuman, true);
+  assert.equal(subject.minSkinY, 16);
+
+  const isShirtless = checkIsShirtless(data, width, height, subject);
+  assert.equal(isShirtless, true);
+});
+
+test('generateCritique delivers shirtless roast and score', () => {
+  const shirtlessAnalysis = {
+    top: { name: 'Bare Skin (No Shirt)', category: 'skin' },
+    mid: { name: 'Dark Navy' },
+    bottom: { name: 'Pitch Black' },
+    harmony: { type: 'shirtless', label: 'Shirtless / No Shirt', scoreBonus: -4.2 },
+    patternDensity: 'clean',
+    pixelSignature: '77777',
+    isShirtless: true
+  };
+
+  const critique = generateCritique(shirtlessAnalysis);
+  assert.ok(critique.score <= 4.5, `Shirtless score should be penalized, got ${critique.score}`);
+  assert.ok(
+    critique.aura.includes('TARZAN') || 
+    critique.aura.includes('BARE CHEST') || 
+    critique.aura.includes('SOLAR') || 
+    critique.aura.includes('BEACH') || 
+    critique.aura.includes('GYM')
+  );
+  assert.ok(critique.roast.toLowerCase().includes('shirt') || critique.roast.toLowerCase().includes('clothing'));
+  assert.ok(critique.upgrade.toLowerCase().includes('shirt'));
 });
